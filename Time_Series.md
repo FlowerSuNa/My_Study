@@ -19,9 +19,19 @@ In order to use these methods for forecasting, we need to derive informative fea
 
 <br>
 
+- Forecast Point := an arbitrary point in time that a prediction is being made.
+
 - Feature Derivation Window (FDW):= a rolling window, relative to the Forecast Point, which can be used to derive descriptive features.
 
-- Forecast Window (FW) := the range of future values we wish to predict, called Forecast Distances(FDs).
+- Forecast Window (FW) := the range of future values we wish to predict, called Forecast Distances (FDs).
+
+<br>
+
+- How much recent history is required in order to make new predictions (e.g., at least 28 days ago)
+
+- How recent of data is availale (e.g., up to 7 days ago)
+
+- Which forecast distances are needed (2 to 7 days)
 
 <br>
 
@@ -41,3 +51,15 @@ In order to use these methods for forecasting, we need to derive informative fea
 3. Window Features : These are a summary of values over a fixed window of prior time steps. <br>
 
 > ex) Rolling(mean, max, min,...),...
+
+<br>
+
+---
+
+### References
+
+https://www.kdnuggets.com/2017/11/automated-feature-engineering-time-series-data.html
+
+
+https://machinelearningmastery.com/basic-feature-engineering-time-series-data-python/
+
