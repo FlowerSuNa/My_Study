@@ -45,27 +45,35 @@ In order to use these methods for forecasting, we need to derive informative fea
 
 <br>
 
-1. Date Time Features : These are components of the time step itself for each observation. <br> 
+* Date Time Features : These are components of the time step itself for each observation. <br> 
 ex) Month, Day, ... <br>
 
-2. Lag Features : These are values at prior time steps. <br> 
+* Lag Features : These are values at prior time steps. <br> 
 ex) Value(t-1), Value(t+1), ... <br>
 
-3. Window Features : These are a summary of values over a fixed window of prior time steps. <br> 
-ex) Rolling mean, max, min,... (statistics) <br>
-ex) Rolling entropy, majority for categorical features <br>
-ex) Rolling text statistics for text features <br>
-ex) Bollinger bands and statistics
-
+* Window Features : These are a summary of values over a fixed window of prior time steps. <br> ex) <br> 
+  * Rolling mean, max, min,... (statistics) <br>
+  * Rolling entropy, majority for categorical features <br> 
+  * Rolling text statistics for text features <br> 
+  * Bollinger bands and statistics
+  
 <br>
 
---
+---
 
 ### Time series Treatments
 
 <br>
 
 Can consider ways to transform the target variable in order ro maximize the predictive accuracy and stability of predictions.
+
+* Log-transformation (for exponential trends and multiplicative models)
+
+* Periodic differencing (to make an integrated model with stationary targets)
+
+* Simple naive difference (using the most recent FDW row)
+
+<br>
 
 ---
 
