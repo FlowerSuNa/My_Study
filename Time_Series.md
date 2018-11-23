@@ -79,8 +79,9 @@ Can consider ways to transform the target variable in order ro maximize the pred
 
 ### References
 
-https://www.kdnuggets.com/2017/11/automated-feature-engineering-time-series-data.html
+<br>
 
+https://www.kdnuggets.com/2017/11/automated-feature-engineering-time-series-data.html
 
 https://machinelearningmastery.com/basic-feature-engineering-time-series-data-python/
 
