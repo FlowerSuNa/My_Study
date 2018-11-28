@@ -17,9 +17,11 @@ Guolin Ke, Qi Meng, Thomas Finley, Taifeng Wang, Wei Chen, Weidong Ma, Qiwei Ye,
 
 ## Introduction
 
-* **Gradient Boosting Decision Tree** [(GBDT)](Gradient_Boosting.md)
-  * a widely-used machine learning algorithm, due to its efficiency, accuracy, and interpretability
-  * state-of-the-art-performances in many machine learning tasks
+<br>
+
+**Gradient Boosting Decision Tree** [(GBDT)](Gradient_Boosting.md)
+* a widely-used machine learning algorithm, due to its efficiency, accuracy, and interpretability
+* state-of-the-art-performances in many machine learning tasks
   
 <br>
 
@@ -34,3 +36,35 @@ for every feature, scan all the data instances to estimate the information gain 
 <br> . <br> . <br> . <br> 
 
 ### NO!
+For example, it is unclear how to perform data sampling for GBDT.
+
+<br>
+
+**Two novel techniques towards this goal**
+* Gradient-based One-Side Sampling (GOSS)
+* Exclusive Feature Bundling (EFB)
+
+<br>
+
+---
+
+## Preliminaries
+
+<br>
+
+* GBDT
+  * an ensemble model of decision trees, which are trained in sequence.
+  * learn the decision trees by fitting the negative gradients in each iteration.
+  * the main cost : learning the decision trees
+  * the most time-consuming part in learning a decision tree is to find the best split points
+  
+* Pre-sorted Algorithm
+  * one of the most popular algorithms to find split points
+  * enumerate all possible split points on the pre-sorted feature values
+  * simple and can find the optimal split points
+  * inefficient in both training speed and memory consumption
+  
+* histogram-based algorithm
+  * the popular algorithms to find split points
+  * Instead of finding the split points on the sorted feature values, bucket continuous feature values into discrete bins and uses these bins to construct feature histograms during training
+  * more efficient in both memory consumption and training speed
