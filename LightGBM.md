@@ -64,7 +64,14 @@ For example, it is unclear how to perform data sampling for GBDT.
   * simple and can find the optimal split points
   * inefficient in both training speed and memory consumption
   
-* histogram-based algorithm
+* Histogram-based Algorithm
   * the popular algorithms to find split points
   * Instead of finding the split points on the sorted feature values, bucket continuous feature values into discrete bins and uses these bins to construct feature histograms during training
   * more efficient in both memory consumption and training speed
+  * IMAGE
+  
+<br>
+
+To reduce the size of the training data, a common approach is to down sample the data instances.
+
+cannot be directly applied to GBDT since there are no native weights for data instances in GBDT.
