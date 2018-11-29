@@ -47,14 +47,24 @@ for every feature, scan all the data instances to estimate the information gain 
 
 <br> . <br> . <br> . <br> 
 
-### NO!
-For example, it is unclear how to perform data sampling for GBDT.
+### ???
 
 <br>
 
-**Two novel techniques towards this goal**
+* While there is no native weight for data instance in GBDT, data instances with different gradients play different roles in the computation of information gain.
+* Usually in real applications, although there are a large number of features, the feature space is quite sparse, which provides us a possibility of designing a nearly lossless approach to reduce the number of effective features.
+
+<br>
+
+### Two novel techniques towards this goal
 * *Gradient-based One-Side Sampling* (**GOSS**)
 * *Exclusive Feature Bundling* (**EFB**)
+
+
+
+<br>
+
+
 
 <br>
 
@@ -91,6 +101,13 @@ For example, it is unclear how to perform data sampling for GBDT.
 ---
 
 ## 3. Gradient-basedOne-SideSampling
+
+### 3-1. AlgorithmDescription
+
+**GOSS**
+* keeps all the instances with large gradients and performs random sampling on the instances withsmallgradients. 
+* In order to compensate the inﬂuence to the data distribution, when computingthe information gain, GOSS introduces a constant multiplier for the data instances with small gradients.
+
 
 ![Algorithm_2](Image/LightGBM_Algorithm_2.png)
 
