@@ -47,7 +47,7 @@ for every feature, scan all the data instances to estimate the information gain 
 
 <br> . <br> . <br> . <br> 
 
-### ???
+### Highly non-trivial
 
 <br>
 
@@ -59,12 +59,6 @@ for every feature, scan all the data instances to estimate the information gain 
 ### Two novel techniques towards this goal
 * *Gradient-based One-Side Sampling* (**GOSS**)
 * *Exclusive Feature Bundling* (**EFB**)
-
-
-
-<br>
-
-
 
 <br>
 
@@ -105,17 +99,22 @@ for every feature, scan all the data instances to estimate the information gain 
 ### 3-1. AlgorithmDescription
 
 **GOSS**
-* keeps all the instances with large gradients and performs random sampling on the instances withsmallgradients. 
-* In order to compensate the inﬂuence to the data distribution, when computingthe information gain, GOSS introduces a constant multiplier for the data instances with small gradients.
+* keep all the instances with large gradients and performs random sampling on the instances withsmallgradients. 
+* In order to compensate the inﬂuence to the data distribution, when computingthe information gain, introduce a constant multiplier for the data instances with small gradients. <br> ![Algorithm_2](Image/LightGBM_Algorithm_2.png)
+
+<br>
+
+### 3-2. TheoreticalAnalysis
 
 
-![Algorithm_2](Image/LightGBM_Algorithm_2.png)
 
 <br>
 
 ---
 
 ## 4. Exclusive Feature Bundling
+
+**EFB**
 
 ![Algorithm_3](Image/LightGBM_Algorithm_3.png)
 
@@ -194,10 +193,9 @@ Table4 :
 
 ### 5-2. Analysis on GOSS
 
-* The speed-up ability of GOSS
-  * 
-  
-  
+### 5-3. Analysis on EFB
+
+<br>
 
 ---
 
