@@ -48,7 +48,7 @@ For example, it is unclear how to perform data sampling for GBDT.
 
 ---
 
-## Preliminaries
+## 2. Preliminaries
 
 <br>
 
@@ -82,14 +82,13 @@ cannot be directly applied to GBDT since there are no native weights for data in
 
 ## 5 Experiments
 
-**Experimental environment**
+**Experimental environment** <br>
 * a Linux server with two E5-2670 v3 CPUs (in total 24 cores) and 256GB memories
 * All experiments run with multi-threading and the number of threads is ﬁxed to 16.
 
 <br>
 
-**Use ﬁve different datasets which are all publicly available**
-
+**Use ﬁve different datasets which are all publicly available** <br>
 Table 1 : Datasets used in the experiments
 
 | Name | #data | #feature | Description | Task | Metric |
@@ -102,8 +101,7 @@ Table 1 : Datasets used in the experiments
 
 <br>
 
-**Overall training time cost comparison**
-
+**Overall training time cost comparison** <br>
 Table2 : The values are the average time cost (seconds) for training one iteration
 
 |  | xgb_exa | xgb_his | lgb_baseline | EFB_only | LightGBM |
@@ -116,11 +114,8 @@ Table2 : The values are the average time cost (seconds) for training one iterati
 
 <br>
 
-**Overall accuracy comparison on test datasets.**
-
-Use AUC for classiﬁcation task and NDCG@10 for ranking task.
-
-Table3 :
+**Overall accuracy comparison on test datasets.** <br>
+Table3 : Use AUC for classiﬁcation task and NDCG@10 for ranking task.
 
 |  | xgb_exa | xgb_his | lgb_baseline | EFB_only | LightGBM |
 |--|:-------:|:-------:|:------------:|:--------:|:--------:|
@@ -130,4 +125,25 @@ Table3 :
 | KDD10 | 0.7796 | OOM | 0.78735 | 0.7759±3e-4 | 0.78732±1e-4 |
 | KDD12 | 0.7029 | OOM | 0.7049 | 0.6989±8e-4 | 0.7051±5e-5 |
 
-![Figure](Image/LightGPM_Figure.png)
+![Figure](Image/LightGBM_Figure.png)
+
+<br>
+
+LightGBM is the fastest while maintaining almost the same accuracy as baselines. <br>
+Since xgb_his is quite memory consuming, it cannot run successfully on KDD10 and KDD12 datasets due to out-of-memory. <br>
+The speed-up is calculated based on training time per iteration since allalgorithmsconvergeaftersimilarnumberofiterations. <br>
+
+<br>
+
+**Accuracy comparison on LETOR dataset for GOSS and SGB under different sampling ratios** <br>
+Table4 : 
+
+| Sampling ratio | 0.1 | 0.15 | 0.2 | 0.25 | 0.3 | 0.35 | 0.4 |
+|:--------------:|:---:|:----:|:---:|:----:|:---:|:----:|:---:|
+| SGB | 0.5182 | 0.5216 | 0.5239 | 0.5249 | 0.5252 | 0.5263 | 0.5267 | 
+| GOSS | 0.5224 | 0.5256 | 0.5275 | 0.5284 | 0.5289 | 0.5293 | 0.5296 |
+
+<br>
+
+### Analysis on GOSS
+
