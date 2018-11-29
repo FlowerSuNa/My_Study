@@ -6,23 +6,35 @@ Guolin Ke, Qi Meng, Thomas Finley, Taifeng Wang, Wei Chen, Weidong Ma, Qiwei Ye,
 
 ### Abstract
 
-* But the efficiency and scalability are stil unsatisfactory when 
-  * the feature dimension is high
-  * data size is large
+**GBDT**
+* a popular machine learning algorithm
+* a few effective implementations such as XGBoost and pGBRT
 
+<br>
+
+**But** <br>
+the efﬁciency and scalability are still unsatisfactory when the feature dimension is high and data size is large.
+
+<br>
+
+**To tackle this problem**, <br>
+propose two novel techniques: *Gradient-based One-Side Sampling* (**GOSS**) and *Exclusive Feature Bundling* (**EFB**). 
+
+<br>
+
+**New GBDT implementation with GOSS and EFB LightGBM** <br>
+speeds up the training process of conventional GBDT by up to over 20 times while achieving almost the same accuracy through experiments on multiple public datasets.
 
 <br>
 
 ---
 
-## Introduction
+## 1. Introduction
 
-<br>
-
-**Gradient Boosting Decision Tree** [(GBDT)](Gradient_Boosting.md)
+**GBDT**
 * a widely-used machine learning algorithm, due to its efficiency, accuracy, and interpretability
 * state-of-the-art-performances in many machine learning tasks
-  
+
 <br>
 
 **Need to**, <br>
@@ -41,14 +53,14 @@ For example, it is unclear how to perform data sampling for GBDT.
 <br>
 
 **Two novel techniques towards this goal**
-* Gradient-based One-Side Sampling (GOSS)
-* Exclusive Feature Bundling (EFB)
+* *Gradient-based One-Side Sampling* (**GOSS**)
+* *Exclusive Feature Bundling* (**EFB**)
 
 <br>
 
 ---
 
-## 2. Preliminaries
+## 2 Preliminaries
 
 <br>
 
@@ -80,7 +92,9 @@ cannot be directly applied to GBDT since there are no native weights for data in
 
 ---
 
-## 5 Experiments
+## 5. Experiments
+
+### 5-1. Overall Comparison
 
 **Experimental environment** <br>
 * a Linux server with two E5-2670 v3 CPUs (in total 24 cores) and 256GB memories
@@ -145,5 +159,22 @@ Table4 :
 
 <br>
 
-### Analysis on GOSS
+### 5-2. Analysis on GOSS
+
+* The speed-up ability of GOSS
+  * 
+  
+  
+
+---
+
+## 6. Conclusion
+
+A novel GBDT algorithm called **LightGBM** contains two novel techniques: ***Gradient-based One-Side Sampling*** and ***Exclusive Feature Bundling*** to deal with large number of data instances and large number of features respectively. <br>
+Show that with the help of **GOSS** and **EFB** ,LightGBM can signiﬁcantly outperform XGBoost and SGB in terms of computational speed and memory consumption. <br>
+
+
+
+
+
 
