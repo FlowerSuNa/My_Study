@@ -75,3 +75,59 @@ For example, it is unclear how to perform data sampling for GBDT.
 To reduce the size of the training data, a common approach is to down sample the data instances.
 
 cannot be directly applied to GBDT since there are no native weights for data instances in GBDT.
+
+<br>
+
+---
+
+## 5 Experiments
+
+**Experimental environment**
+* a Linux server with two E5-2670 v3 CPUs (in total 24 cores) and 256GB memories
+* All experiments run with multi-threading and the number of threads is ﬁxed to 16.
+
+<br>
+
+**Use ﬁve different datasets which are all publicly available**
+
+Table 1 : Datasets used in the experiments
+
+| Name | #data | #feature | Description | Task | Metric |
+|------|:-----:|:--------:|-------------|------|--------|
+| Allstate | 12M | 4228 | Sparse | Binary classification | AUC |
+| Fight Delay | 10M | 700 | Sparse | Binary classification | AUC |
+| LETOR | 2M | 136 | Dense | Ranking | NDCG |
+| KDD10 | 19M | 29M | Sparse | Binary classification | AUC |
+| KDD12 | 119M | 54M | Sparse | Binary classification | AUC |
+
+<br>
+
+**Overall training time cost comparison**
+
+Table2 : The values are the average time cost (seconds) for training one iteration
+
+|  | xgb_exa | xgb_his | lgb_baseline | EFB_only | LightGBM |
+|--|:-------:|:-------:|:------------:|:--------:|:--------:|
+| Allstate | 10.85 | 2.63 | 6.07 | 0.71 | 0.28 |
+| Fight Delay | 5.97 | 1.05 | 1.39 | 0.27 | 0.22 |
+| LETOR | 5.55 | 0.63 | 0.49 | 0.46 | 0.31 |
+| KDD10 | 108.27 | OOM | 39.85 | 6.33 | 2.85 |
+| KDD12 | 191.99 | OOM | 168.26 | 20.23 | 12.67 |
+
+<br>
+
+**Overall accuracy comparison on test datasets.**
+
+Use AUC for classiﬁcation task and NDCG@10 for ranking task.
+
+Table3 :
+
+|  | xgb_exa | xgb_his | lgb_baseline | EFB_only | LightGBM |
+|--|:-------:|:-------:|:------------:|:--------:|:--------:|
+| Allstate | 0.6070 | 0.6089 | 0.6093 | 0.6064±7e-4 | 0.6093±9e-5 |
+| Fight Delay | 0.7601 | 0.7840 | 0.7847 | 0.7780±8e-4 | 0.7846±4e-5 | 
+| LETOR | 0.4977 | 0.4982 | 0.5277 | 0.5239±6e-4 | 0.5275±5e-4 | 
+| KDD10 | 0.7796 | OOM | 0.78735 | 0.7759±3e-4 | 0.78732±1e-4 |
+| KDD12 | 0.7029 | OOM | 0.7049 | 0.6989±8e-4 | 0.7051±5e-5 |
+
+![Figure](Image/LightGPM_Figure.png)
