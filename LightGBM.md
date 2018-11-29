@@ -60,33 +60,49 @@ For example, it is unclear how to perform data sampling for GBDT.
 
 ---
 
-## 2 Preliminaries
+## 2. Preliminaries
 
-<br>
-
-* GBDT
-  * an ensemble model of decision trees, which are trained in sequence.
+### GBDT
+  * an ensemble model of decision trees, which are trained in sequence
   * learn the decision trees by fitting the negative gradients in each iteration.
   * the main cost : learning the decision trees
-  * the most time-consuming part in learning a decision tree is to find the best split points
-  
-* Pre-sorted Algorithm
-  * one of the most popular algorithms to find split points
-  * enumerate all possible split points on the pre-sorted feature values
-  * simple and can find the optimal split points
-  * inefficient in both training speed and memory consumption
-  
-* Histogram-based Algorithm
-  * the popular algorithms to find split points
-  * Instead of finding the split points on the sorted feature values, bucket continuous feature values into discrete bins and uses these bins to construct feature histograms during training
-  * more efficient in both memory consumption and training speed
-  * IMAGE
+  * the most time-consuming part in learning a decision tree is to find the best split points.
   
 <br>
+  
+### Algorithmstoﬁndsplit points
+* **Pre-sorted Algorithm**
+  * one of the most popular algorithms to find split points
+  * enumerate all possible split points on the pre-sorted feature values
+  * simple
+  * can find the optimal split points
+  * inefficient in both training speed and memory consumption
+  
+* **Histogram-based Algorithm**
+  * the popular algorithms to find split points
+  * Instead of finding the split points on the sorted feature values, bucket continuous feature values into discrete bins and uses these bins to construct feature histograms during training
+  * more efficient in both memory consumption and training speed <br>![Algorithm_1](Image/LightGBM_Algorithm_1.png)
+  * histogram building : O(#data × #feature)
+  * split point ﬁnding : O(#bin × #feature)
+  * since #bin is usually much smaller than #data, will be able to substantially speed up the training of GBDT if can reduce #data or #feature
 
-To reduce the size of the training data, a common approach is to down sample the data instances.
+<br>
 
-cannot be directly applied to GBDT since there are no native weights for data instances in GBDT.
+---
+
+## 3. Gradient-basedOne-SideSampling
+
+![Algorithm_2](Image/LightGBM_Algorithm_2.png)
+
+<br>
+
+---
+
+## 4. Exclusive Feature Bundling
+
+![Algorithm_3](Image/LightGBM_Algorithm_3.png)
+
+![Algorithm_4](Image/LightGBM_Algorithm_4.png)
 
 <br>
 
