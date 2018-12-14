@@ -6,7 +6,7 @@ Guolin Ke, Qi Meng, Thomas Finley, Taifeng Wang, Wei Chen, Weidong Ma, Qiwei Ye,
 
 ### Abstract
 
-**GBDT**
+**GBDT** : [Gradient Boosting](Gradient_Boosting.md)
 * a popular machine learning algorithm
 * a few effective implementations such as XGBoost and pGBRT
 
@@ -14,11 +14,21 @@ Guolin Ke, Qi Meng, Thomas Finley, Taifeng Wang, Wei Chen, Weidong Ma, Qiwei Ye,
 
 **But** <br>
 the efﬁciency and scalability are still unsatisfactory when the feature dimension is high and data size is large.
+> 하지만 차원 변수에 데이터 크기가 큰 경우 효율성과 확장성은 여전히 불만족스럽다.
 
 <br>
 
-**To tackle this problem**, <br>
-propose two novel techniques: *Gradient-based One-Side Sampling* (**GOSS**) and *Exclusive Feature Bundling* (**EFB**). 
+**To tackle this problem** <br>
+* *Gradient-based One-Side Sampling* (**GOSS**)
+  * We exclude a significant proporation of data instances with small gradients, and only use the rest to estimate the information gain.
+  * since the data instances with larger gradients play a more important role in the computation of information gain, can obtain quite accurate estimation of the information gain with a much smaller data size.
+
+* *Exclusive Feature Bundling* (**EFB**)
+
+ > * 기울기 기반 단측 표본추출 (GOSS)
+ >   * 데이터 개체 중 기울기가 작은 상당 부분을 제외시키고 나머지만 사용하여 정보를 얻을 수 있다.
+ >   * 기울기가 큰 데이터 개체가 정보 획득 계산에 더 중요한 역할을 하기 때문에 훨씬 작은 크기의 데이터로 정보 획득을 매우 정확하게 추정할 수 있다.
+
 
 <br>
 
