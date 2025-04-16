@@ -17,8 +17,6 @@
     - seq2seq의 Encoder는 BERT(with bidirectional encoder)의 AE 특성을 가지고 있고, Decoder는 GPT(with left-to-right decoder)의 AR 특성을 가지고 있음
     - 구조적으로 Encoder-Decoder 형태임
 
-- Denosing 기법을 seq2seq에 적용시켜 자연어 생성, 번역, 이해를 하는 모델임
-
 ### 2) MNLI
 
 - Multi-Genre Natural Language Inference
@@ -36,6 +34,15 @@
     | 휴대폰이 빠르게 충전돼요. | 이 제품은 충전 속도가 빨라요. | entailment (포함) |
     | 배터리가 빨리 닳아요. | 배터리가 오래 간다. | contradiction (모순) |
     | 터치감이 좋아요. | 성능이 좋다. | neutral (중립) |
+
+### 3) Bart-large-mnli
+
+-  hypothesis를 라벨 후보들로 직접 만들어서 입력
+
+- 각각의 hypothesis마다 entailment 점수만 사용
+- 즉, softmax 결과 중 entailment 확률만 뽑아서 비교
+
+
 
 ---
 

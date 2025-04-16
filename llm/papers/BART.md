@@ -44,3 +44,4 @@
 
 - [논문](https://arxiv.org/pdf/1910.13461)
 - [논문 요약](https://velog.io/@tobigs-nlp/BART-Denoising-Sequence-to-Sequence-Pre-training-for-Natural-Language-Generation-Translation-and-Comprehension)
+- [논문 요약2](https://velog.io/@dutch-tulip/BART)
