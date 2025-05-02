@@ -75,7 +75,7 @@
     - 손상된 Text를 입력으로 받아, 양방향 Encoder와 단반향(좌→우) 자기회귀적 Decoder를 갖춘 Seq2seq 모델로 구현됨
     - 사전 학습은 원본 문서에 대한 Negative Log Likelihood를 최소화하는 방식으로 진행됨
 
-##### 2.1 Architecture
+#### 2.1 Architecture
 
 - BART는 표준 Seq2seq Transformer 구조를 사용함
     - 단, GPT와 동일하게 Activation 함수를 ReLU 대신 [GeLU](#gelu)로 변경하고, Parameter를 N(0, 0.02) 분포로 초기화함
@@ -88,7 +88,7 @@
 
 - 전체적으로 BART는 동일 크기의 BERT 모델보다 약 10% 더 많은 Parameter를 가짐
 
-##### 2.2 Pre-training BART
+#### 2.2 Pre-training BART
 
 - BART는 문서를 손상시킨 후, Decoder 출력과 원본 문서 간의 cross-entropy loss를 최소화하는 방식으로 학습됨
 
@@ -135,7 +135,7 @@
     이 추가된 Encoder는 별도의 단어 집합(vocabulary)으로 사용할 수 있음
 ```
 
-##### 3.1 Sequence Classification Tasks
+#### 3.1 Sequence Classification Tasks
 
 - Sequence 분류 시에는 Encoder와 Decoder에 동일한 입력을 주고, Decoder의 마지막 Hidden State를 Multi-class 분류기에 입력함
 
@@ -144,11 +144,11 @@
     > - Decoder 입력 끝에 Token을 하나 더 붙여, 그 Token이 전체 입력 내용을 요약한 표현을 갖도록 만드는 구조임
     >- 이 요약된 Hidden State를 문장 대표 표현으로 씀(?)
 
-##### 3.2 Token Classification Tasks
+#### 3.2 Token Classification Tasks
 
 - Token 분류 시에는 SQuAD의 답변 Endpoint 분류와 유사하게, 전체 문서를 Encoder와 Decoder에 입력한 뒤, 각 단어의 표현이 포함된 Decoder의 상단 Hidden State를 활용해 분류를 수행함
 
-##### 3.3 Sequence Generation Tasks
+#### 3.3 Sequence Generation Tasks
 
 - BART는 자기회귀적 Decoder를 갖추고 있어, 추상적인 질의응답과 요약과 같은 Sequence 생성 작업을 직접 수행할 수 있음
 - 이 두 작업은 정보를 입력으로부터 복사해 활용하지만, Denoising 사전 학습 방식과 밀접하게 연관되어 작동함
@@ -158,7 +158,7 @@
 
 - 이때 Encoder 입력은 입력 Sequence이며, Decoder는 자기회귀적 출력을 생성함
 
-##### 3.4 Machine Translation
+#### 3.4 Machine Translation
 
 - BART는 영어로 번역하는 기계 번역 Decoder의 성능을 향상시킴
     - 기존 연구 Edunov(2019)에서는 사전 학습된 Encoder를 통합하여 성능을 높였지만, Decoder의 언어 모델은 이점이 제한적임
@@ -174,14 +174,36 @@
 
 ### 4. Comparing Pre-training Objectives
 
-- BART는 이전 연구 보다 다양한 noising 방식을 사전 학습에 활용할 수 있음
+- BART는 이전 연구 보다 다양한 Noising 방식을 사전 학습에 활용할 수 있음
 
 - 기본 모델(6개의 Encoder와 Decoder Layer, 768개의 Hidden)을 사용하여 다양한 선택지를 비교함
     - 5장에서 다룰 대규모 실험의 일부 작업을 기준으로 평가됨
 
-##### 4.1 Comparision Objectives
+#### 4.1 Comparision Objectives
 
-- 
+- 그동안 다양한 사전 학습 방식이 제안되었지만, 학습 데이터와 자원, 모델 구조, Fine-tuning 절차의 차이로 인해 모델 간의 성능을 공정하게 비교하기는 어려움
+
+- 이에 본 연구에서는 최근에 제안된 판별 및 생성 작업을 위한 주요 사전 학습 방식을 재구현함
+    - 공정한 비교를 위해 사전 학습 방식 외의 요소를 최대한 통제하는 것을 목표로 함
+    - 단, 성능 향상을 위해 Learning Rate와 Layer 정규화 사용은 (각 방식에 맞게 별도로 조정하여) 미세하게 변경함
+
+- 참고로, 구현된 방식을 다양한 서적과 Wikipedia 데이터로 100만 Step 학습된 BERT와 비교함
+    > - BART에 다양한 사전 학습 방식을 적용시켜 BERT와 비교해 봄
+
+**Language Model**
+- GPT와 유사하게 단반향(좌→우) Transformer 언어 모델을 학습함
+- 이 모델은 Cross-attention이 제거된 BART decoder와 동일함
+
+**Permuted Language Model**
+- XLNet 기반으로, Token의 1/6을 sampling하고 무작위 순서(Permutation)에 따라 자기회귀적으로 Token을 생성함
+- 다른 모델과의 일관성을 위해 XLNet의 Relative Positional Embedding이나 Segment 간 Attention은 구현하지는 않음
+
+**Masked Language Model**
+- BERT를 따라, Token의 15%는 `MASK`로 치환하여 원래 Token을 독립적으로 예측하도록 모델을 학습시킴
+
+**Multitask Masked Language Model**
+- UniLM으로, 추가 Self-attention Mask와 함께 Masked 언어 모델을 학습시킴
+- Self-attention Mask는 1/6무작위로 선택됨
 
 ---
 
@@ -542,49 +564,48 @@ While many pre-training objectives have been proposed,
 fair comparisons between these have been difficult to perform, 
 at least in part due to differences in training data, training resources, architectural differences between models, and fine-tuning procedures. 
 
-We re-implement strong pre-training approaches recently
-proposed for discriminative and generation tasks. We
-aim, as much as possible, to control for differences unrelated to the pre-training objective. However, we do
-make minor changes to the learning rate and usage of
-layer normalisation in order to improve performance
-(tuning these separately for each objective). For reference, we compare our implementations with published
-numbers from BERT, which was also trained for 1M
-steps on a combination of books and Wikipedia data.
+We re-implement strong pre-training approaches recently proposed for discriminative and generation tasks. 
+
+We aim, as much as possible, to control for differences unrelated to the pre-training objective. 
+
+However, we do make minor changes to the learning rate and usage of layer normalisation 
+in order to improve performance (tuning these separately for each objective). 
+
+For reference, we compare our implementations with published numbers from BERT, 
+which was also trained for 1M steps on a combination of books and Wikipedia data.
+
 We compare the following approaches:
 
-Language Model Similarly to GPT (Radford et al.,
-2018), we train a left-to-right Transformer language
-model. This model is equivalent to the BART decoder,
-without cross-attention.
-Permuted Language Model Based on XLNet (Yang
-et al., 2019), we sample 1/6 of the tokens, and generate them in a random order autoregressively. For consistency with other models, we do not implement the
-relative positional embeddings or attention across segments from XLNet.
-Masked Language Model Following BERT (Devlin
-et al., 2019), we replace 15% of tokens with [MASK]
-symbols, and train the model to independently predict
-the original tokens.
-Multitask Masked Language Model As in UniLM
-(Dong et al., 2019), we train a Masked Language
-Model with additional self-attention masks. Self attention masks are chosen randomly in with the follow
-proportions: 1/6 left-to-right, 1/6 right-to-left, 1/3 unmasked, and 1/3 with the first 50% of tokens unmasked
-and a left-to-right mask for the remainder.
-Masked Seq-to-Seq Inspired by MASS (Song et al.,
-2019), we mask a span containing 50% of tokens,
-and train a sequence to sequence model to predict the
-masked tokens.
+Language Model
+Similarly to GPT (Radford et al., 2018), we train a left-to-right Transformer language model. 
+This model is equivalent to the BART decoder, without cross-attention.
 
-For the Permuted LM, Masked LM and Multitask
-Masked LM, we use two-stream attention (Yang et al.,
-2019) to efficiently compute likelihoods of the output
-part of the sequence (using a diagonal self-attention
-mask on the output to predict words left-to-right).
+Permuted Language Model
+Based on XLNet (Yang et al., 2019), we sample 1/6 of the tokens, and generate them in a random order autoregressively. 
+For consistency with other models, we do not implement the relative positional embeddings or attention across segments from XLNet.
 
-We experiment with (1) treating the task as a standard sequence-to-sequence problem, where the source
-input to the encoder and the target is the decoder output, or (2) adding the source as prefix to the target in
-the decoder, with a loss only on the target part of the
-sequence. We find the former works better for BART
-models, and the latter for other models.
-To most directly compare our models on their ability
-to model their fine-tuning objective (the log likelihood
-of the human text), we report perplexity in Table 1.
+Masked Language Model
+Following BERT (Devlin et al., 2019), we replace 15% of tokens with [MASK] symbols, and train the model to independently predict the original tokens.
+
+Multitask Masked Language Model
+As in UniLM (Dong et al., 2019), we train a Masked Language Model with additional self-attention masks. 
+Self attention masks are chosen randomly in with the follow proportions: 
+1/6 left-to-right, 1/6 right-to-left, 1/3 unmasked, and 1/3 with the first 50% of tokens unmasked and a left-to-right mask for the remainder.
+
+Masked Seq-to-Seq
+Inspired by MASS (Song et al., 2019), we mask a span containing 50% of tokens,
+and train a sequence to sequence model to predict the masked tokens.
+
+For the Permuted LM, Masked LM and Multitask Masked LM, we use two-stream attention (Yang et al., 2019) 
+to efficiently compute likelihoods of the output part of the sequence (using a diagonal self-attention mask on the output to predict words left-to-right).
+
+We experiment with (1) treating the task as a standard sequence-to-sequence problem, 
+where the source input to the encoder and the target is the decoder output, or 
+(2) adding the source as prefix to the target in the decoder, 
+with a loss only on the target part of the sequence. 
+
+We find the former works better for BART models, and the latter for other models.
+
+To most directly compare our models on their ability to model their fine-tuning objective (the log likelihood of the human text), 
+we report perplexity in Table 1.
 ```
