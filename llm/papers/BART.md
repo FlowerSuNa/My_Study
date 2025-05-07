@@ -167,7 +167,7 @@
 
 - BART는 영어로 번역하는 기계 번역 Decoder의 성능을 향상시킴
     - 기존 연구 Edunov(2019)에서는 사전 학습된 Encoder를 통합하여 성능을 높였지만, Decoder의 언어 모델은 이점이 제한적임
-- [BiText](#bitext)로 학습된 Encoder Parameter Set을 새로 추가하여, BART(Encoder와 Decoder 모두)가 기계 번역을 위한 하나의 사전 학습된 Decoder로 사용 가능함 (***Figure 3b***)
+- Bitext(Source와 Target 언어가 1:1로 매핑된 문자쌍)로 학습된 Encoder Parameter Set을 새로 추가하여, BART(Encoder와 Decoder 모두)가 기계 번역을 위한 하나의 사전 학습된 Decoder로 사용 가능함 (***Figure 3b***)
     - 보다 정확히는, BART의 Embedding Layer를 무작위로 초기화된 새로운 Encoder로 교체함
     - 추가된 Encoder는 외국어 단어를 BART가 복원 가능한 형태의 입력(Noisy 영어)으로 바꾸어 주도록 학습함
 
@@ -244,13 +244,51 @@
 
 ##### SQuAD
 
-- Wikipedia에서 추출된 질의응답 데이터셋으로, 답변은 주어진 문서 문맥 내에서 Text Span이 추출됨
-- BART는 BERT와 유사하게, 질문과 문맥을 encoder 입력으로 사용하며, decoder에도 이를 함께 입력함
-- 이 모델은 각 Token의 시작 및 종료 Index를 예측하는 분류기가 포함됨
+- Wikipedia에서 추출된 질의응답 데이터셋으로, 답변은 주어진 문서 내에서 Text Span을 추출함
+- BART는 BERT와 유사하게 질문과 문맥을 Encoder 입력으로 사용하며, Decoder에도 이를 함께 입력함
+    - 이 모델에는 답변의 시작 및 종료 Token 위치를 예측하는 Token-level 분류기가 포함되어 있음
 
+##### MNLI
 
+- 한 문장이 다른 문장을 수반하는지 예측하는 Bitext 분류 작업임
+- Fine-tuning된 모델은 EOS Token을 포함하여 두 문장을 연결하고, BART의 Encoder와 Decoder 모두에 이들을 입력됨
+- BERT와 달리 EOS Token의 표현은 문장 간 관계 분류에 사용함
 
+##### ELI5
 
+- 장문의 추상적 질의응답 데이터셋으로, 모델은 질문과 관련 문서를 조합하여 답변을 생성함
+
+##### XSum
+
+- 뉴스 요약 데이터셋이며, 매우 추상적으로 요약됨
+
+##### ConvAI2
+
+- 대화 응답 생성 작업으로, 문맥과 한 타인의 응답을 조합함
+
+##### CNN/DM
+
+- 뉴스 요약 데이터셋으로, 원문과 밀접하게 연관되어 요약됨
+
+#### 4.3 Results
+
+**사전 학습 방식의 성능은 작업별로 상당히 상이함**
+- 사전 학습 방식의 유효성은 작업에 매우 의존적임
+- 예를 들어, 간단한 언어 모델은 ELI5 성능이 가장 우수했지만, SQuAD 결과는 가장 낮았음
+
+**Token Masking은 중요함**
+- 문서를 회전시키거나 문장을 섞는 사전 학습 방식은 매우 좋지 않았음
+- 성공적인 방식은 Token을 제거 또는 masking, Self-attention Mask를 사용하는 것임
+
+**단방향(좌→우) 사전 학습은 생성이 향상됨**
+
+**양방향 Encoder는 SQuAD에서 중요함**
+
+**사전 학습 방식은 중요한 요소가 아님**
+
+**Pure 언어 모델은 ELI5에서 성능이 가장 우수함**
+
+**BART는 가장 일관성있는 우수한 성능을 달성함**
 
 ---
 
@@ -313,9 +351,6 @@
 
 ### CLS
 
-### BiText
-
-- Source 언어와 Target 언어가 1:1로 정렬된 문자쌍(Parallel Sentence Pairs)임
 ---
 
 # Reference
@@ -668,18 +703,65 @@ Similar to BERT (Devlin et al., 2019),
 we use concatenated question and context as input to the encoder of BART, and additionally pass them to the decoder. 
 The model includes classifiers to predict the start and end indices of each token.
 
-MNLI (Williams et al., 2017), a bitext classification
-task to predict whether one sentence entails another.
-The fine-tuned model concatenates the two sentences
-with appended an EOS token, and passes them to both
-the BART encoder and decoder. In contrast to BERT,
-the representation of the EOS token is used to classify
-the sentences relations.
-ELI5 (Fan et al., 2019), a long-form abstractive question answering dataset. Models generate answers conditioned on the concatenation of a question and supporting documents.
-XSum (Narayan et al., 2018), a news summarization
-dataset with highly abstractive summaries.
-ConvAI2 (Dinan et al., 2019), a dialogue response
-generation task, conditioned on context and a persona.
-CNN/DM (Hermann et al., 2015), a news summarization dataset. Summaries here are typically closely
-related to source sentences.
+MNLI (Williams et al., 2017), 
+a bitext classification task to predict whether one sentence entails another.
+The fine-tuned model concatenates the two sentences with appended an EOS token, 
+and passes them to both the BART encoder and decoder. 
+In contrast to BERT,
+the representation of the EOS token is used to classify the sentences relations.
+
+ELI5 (Fan et al., 2019), 
+a long-form abstractive question answering dataset. 
+Models generate answers conditioned on the concatenation of a question and supporting documents.
+
+XSum (Narayan et al., 2018), 
+a news summarization dataset with highly abstractive summaries.
+
+ConvAI2 (Dinan et al., 2019), 
+a dialogue response generation task, conditioned on context and a persona.
+
+CNN/DM (Hermann et al., 2015), 
+a news summarization dataset. 
+Summaries here are typically closely related to source sentences.
+```
+
+#### 4.3 Results
+
+```
+Results are shown in Table 1. 
+
+Several trends are clear:
+
+Performance of pre-training methods varies significantly across tasks 
+The effectiveness of pre-training methods is highly dependent on the task. 
+For example, a simple language model achieves the best ELI5 performance, but the worst SQUAD results.
+
+Token masking is crucial 
+Pre-training objectives based on rotating documents or permuting sentences perform poorly in isolation. 
+The successful methods either use token deletion or masking, or self-attention masks. 
+Deletion appears to outperform masking on generation tasks.
+
+Left-to-right pre-training improves generation
+The Masked Language Model and the Permuted Language Model perform less well than others on
+generation, 
+and are the only models we consider that do not include left-to-right auto-regressive language
+modelling during pre-training.
+
+Bidirectional encoders are crucial for SQuAD 
+As noted in previous work (Devlin et al., 2019), just left-to-right decoder performs poorly on SQuAD, 
+because future context is crucial in classification decisions. 
+However, BART achieves similar performance with only half the number of bidirectional layers.
+
+The pre-training objective is not the only important factor 
+Our Permuted Language Model performs less well than XLNet (Yang et al., 2019). 
+Some of this difference is likely due to not including other architectural improvements, 
+such as relative-position embeddings or segment-level recurrence.
+
+Pure language models perform best on ELI5 
+The ELI5 dataset is an outlier, with much higher perplexities than other tasks, 
+and is the only generation task where other models outperform BART. 
+A pure language model performs best, suggesting that BART is less effective when the output is only loosely constrained by the input.
+
+BART achieves the most consistently strong performance. 
+With the exception of ELI5, BART models using text-infilling perform well on all tasks.
 ```
