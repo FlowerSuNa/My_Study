@@ -27,7 +27,7 @@
 - 최근 연구에서는 Masked Token의 분포, 예측 순서, 대체 가능한 문맥을 개선하는 성과를 달성함
     - 하지만 이 기법들은 특정 End Task(Span 예측, 생성 등)에만 집중하여 적용 가능성이 제한적임
 
-- 본 논문에서는 양방향(Bidirectional)과 자기회귀적(Auto-regressive) Transformer를 결합한 사전 학습 모델인 BART를 제안함
+- 본 논문에서는 양방향(Bidirectional)과 자기회귀(Auto-regressive) Transformer를 결합한 사전 학습 모델인 BART를 제안함
 
 - BART는 다양한 End Task에 적용 가능한 Seq2seq 기반 Denosing Autoencoder임
     - 사전 학습은 Text를 임의의 Nosing 함수로 변형한 후, Seq2seq 모델이 원본 Text로 복구하도록 학습하는 방식임
@@ -78,7 +78,7 @@
 ### 2. Model
 
 - BART는 손상된 문서를 원본 문서로 복원하는 Denoising Autoencoder임
-    - 손상된 Text를 입력으로 받아, 양방향 Encoder와 단반향(좌→우) 자기회귀적 Decoder를 갖춘 Seq2seq 모델로 구현됨
+    - 손상된 Text를 입력으로 받아, 양방향 Encoder와 단반향(좌→우) 자기회귀 Decoder를 갖춘 Seq2seq 모델로 구현됨
     - 사전 학습은 원본 문서에 대한 Negative Log Likelihood를 최소화하는 방식으로 진행됨
 
 #### 2.1 Architecture
@@ -155,7 +155,7 @@
 
 #### 3.3 Sequence Generation Tasks
 
-- BART는 자기회귀적 Decoder를 갖추고 있어, 추상적인 질의응답과 요약과 같은 Sequence 생성 작업을 직접 수행할 수 있음
+- BART는 자기회귀 Decoder를 갖추고 있어, 추상적인 질의응답과 요약과 같은 Sequence 생성 작업을 직접 수행할 수 있음
 - 이 두 작업은 정보를 입력으로부터 복사해 활용하지만, Denoising 사전 학습 방식과 밀접하게 연관되어 작동함
 
     > - BART의 사전 학습 방식은 Noisy 데이터를 복원하는 학습임 (Denosing)
@@ -186,7 +186,7 @@
 
 #### 4.1 Comparision Objectives
 
-- 그동안 다양한 사전 학습 방식이 제안되었지만, 학습 데이터와 자원, 모델 구조, Fine-tuning 절차의 차이로 인해 모델 간의 성능을 공정하게 비교하기는 어려움
+- 그동안 다양한 사전 학습 방식(Objective)이 제안되었지만, 학습 데이터와 자원, 모델 구조, Fine-tuning 절차의 차이로 인해 모델 간의 성능을 공정하게 비교하기는 어려움
 
 - 이에 본 연구에서는 최근에 제안된 판별 및 생성 작업을 위한 주요 사전 학습 방식을 재구현함
     - 공정한 비교를 위해 사전 학습 방식 외의 요소는 최대한 통제함
@@ -221,12 +221,15 @@
 
 <br>
 
-- Permuted LM, Masked LM, Multitask Masked LM은 Sequence 출력의 Likelihood를 효율적으로 계산하기 위해 Two-stream Attention을 사용함
+- Permuted, Masked, Multitask Masked 언어 모델은 Sequence 출력의 Likelihood를 효율적으로 계산하기 위해 [Two-stream Attention](#two-stream-attention)을 사용함
+    > - 일반적인 자기회귀(Autogressive) 방식은 한 Token 씩 순차적으로 예측하므로 비효율적으로 계산됨
+    > - Two-stream 구조는 전체 Target Sequence의 Likelihood를 동시에 계산할 수 있음
+
     - 이때 Decoder 출력에는 단어를 왼쪽에서 오른쪽으로 예측하도록 Diagonal Self-attention Mask를 사용함
 
 - 두 종류의 작업을 실험함
-    - (1) 원천 입력을 Encoder로, Target을 Decoder 출력으로 하는 표준 Seq2seq 문제를 처리하는 실험
-    - (2) Decoder에 Target의 접두사로 원천을 추가하며 Sequence의 Target 부분만 Loss로 계산하는 실험
+    - (1) 원천 입력을 Encoder로, Target을 Decoder 출력으로 하는 표준 Seq2seq 문제를 처리하는 작업
+    - (2) Decoder에 Target의 접두사로 원천을 추가하며 Sequence의 Target 부분만 Loss로 계산하는 작업
         > - Decoder 입력으로 [원천 + Target] Sequence가 입력되며, Loss는 Target 부분만 계산함
 
 **[Table 1] 사전 학습 방식 비교**
@@ -273,22 +276,44 @@
 #### 4.3 Results
 
 **사전 학습 방식의 성능은 작업별로 상당히 상이함**
-- 사전 학습 방식의 유효성은 작업에 매우 의존적임
-- 예를 들어, 간단한 언어 모델은 ELI5 성능이 가장 우수했지만, SQuAD 결과는 가장 낮았음
+- 사전 학습 방식의 유효성은 Downstream 작업에 따라 크게 달라짐
+- 예를 들어, 간단한 언어 모델은 ELI5에서는 가장 우수한 성능을 보였지만, SQuAD에서는 가장 낮은 성능을 기록함
 
-**Token Masking은 중요함**
-- 문서를 회전시키거나 문장을 섞는 사전 학습 방식은 매우 좋지 않았음
-- 성공적인 방식은 Token을 제거 또는 masking, Self-attention Mask를 사용하는 것임
+**Token Masking은 핵심 요소임**
+- 문서를 회전시키거나 문장 순서를 섞는 방식의 사전 학습은 성능이 매우 낮았음
+- Token을 제거하거나 Masking하는 방식과 Self-attention Mask를 사용하는 방식이 성공적이었음
+- 특히 생성 작업에서는 Token 제거 방식이 Masking 방식을 능가함
 
-**단방향(좌→우) 사전 학습은 생성이 향상됨**
+**단방향(좌→우) 사전 학습은 생성 성능을 향상시킴**
+- Masked와 Permuted 언어 모델은 사전 학습 시 단방향(좌→우) 자기회귀 언어 모델 구조을 사용하지 않아, 생성 작업에서 성능이 낮았음
 
-**양방향 Encoder는 SQuAD에서 중요함**
+**양방향 Encoder는 SQuAD 작업에서 중요함**
+- BERT(Devlin et al., 2019)에서 언급했듯이, 분류 결정에서 이후 문맥은 중요하기 때문에 단방향(좌→우) Decoder는 SQuAD 성능이 낮았음 
+- 하지만 BART는 절반의 양방향 Layer로 BERT와 유사한 성능을 달성함
+    > - BERT는 12-Layer Encoder(양방향) 구조임
+    > - BART는 6-Layer Encoder(양방향)와 12-Layer Decoder(단방향) 구조임
 
-**사전 학습 방식은 중요한 요소가 아님**
+**사전 학습 방식만으로 성능을 결정짓는 요소는 아님**
+- Permuted 언어 모델은 XLNet(Yang et al., 2019) 보다 성능이 나빴음 
+- 다만, Relative-position Embedding과 Segment-level Attention가 구현되지 않았기 때문일 수 있음
 
-**Pure 언어 모델은 ELI5에서 성능이 가장 우수함**
+**순수 언어 모델은 ELI5에서 성능이 가장 우수함**
+- ELI5는 이례적인 결과이며, 다른 모델이 BART를 능가하는 유일한 생성 작업임
+- 순수 언어 모델이 가장 우수했으며, BART는 출력이 입력과의 의미적 연결이 약할 때 비효율적일 수 있음
+    > - BART는 입력을 복원하거나, 입력 기반으로 출력을 구성하는 데 최적화되어 있음
+    > - 따라서 입력에 구속받지 않고 자유롭게 생성해야 하는 경우 한계가 있을 수 있음
+    > - ELI5는 질문이 짧고 답변이 장문이기 때문에 추상적으로 새로운 문장을 생성하는 능력이 필요함
 
 **BART는 가장 일관성있는 우수한 성능을 달성함**
+- Text-infilling 방식을 사용한 BART 모델은 ELI5을 제외한 모든 작업에서 잘 작동함
+
+---
+
+### 5. Large-scale Pre-training Experiments
+
+**[Table 2]**
+
+![Table 2](img/bart-tbl-02.png)
 
 ---
 
@@ -351,14 +376,24 @@
 
 ### CLS
 
+### Two-stream Attention
+
+- Two-stream Attention은 Permutation 기반 언어 모델에서 예측 위치의 불확실성을 해결하기 위해 도입됨
+- 전체 Attention 구조를 Query Stream과 Content Stream으로 분리하여 구성함
+    - Query Stream은 Target 위치와 해당 위치 이전 Token의 정보만 활용하여 학습됨 (Target Token 사용 안함)
+    - Content Stream은 Target Token까지 포함한 Token 정보를 활용하여 학습됨 (Target Token 사용)
+- Attention 연산은 Query Stream에서 생성된 Query와 Content Stream에서 생성된 Key/Value를 활용하여 수행됨
+- 이 구조는 정보 누설(Target Leakage)을 방지하며, 병렬적인 likelihood 계산을 가능하게 함
+
 ---
 
 # Reference
 
-- [논문](https://arxiv.org/pdf/1910.13461)
+- [논문 원본](https://arxiv.org/pdf/1910.13461)
 - [논문 요약](https://velog.io/@tobigs-nlp/BART-DeNoising-Sequence-to-Sequence-Pre-training-for-Natural-Language-Generation-Translation-and-Comprehension)
 - [논문 번역](https://velog.io/@dutch-tulip/BART)
 - [GeLU](https://jik9210.tistory.com/14)
+- [XLNet, Two-stream Attention](https://velog.io/@zhenxi_23/%EB%85%BC%EB%AC%B8%EB%A6%AC%EB%B7%B0-XLNet)
 
 ---
 
@@ -764,4 +799,51 @@ A pure language model performs best, suggesting that BART is less effective when
 
 BART achieves the most consistently strong performance. 
 With the exception of ELI5, BART models using text-infilling perform well on all tasks.
+```
+
+### 5. Large-scale Pre-training Experiments
+
+```
+Recent work has shown that downstream performance can dramatically improve 
+when pre-training is scaled to large batch sizes (Yang et al., 2019; Liu et al., 2019) and corpora. 
+
+To test how well BART performs in this regime, and to create a useful model for downstream
+tasks, 
+we trained BART using the same scale as the RoBERTa model.
+```
+
+#### 5.1 Experimental Setup
+
+```
+We pre-train a large model with 12 layers in each of the encoder and decoder,  and a hidden size of 1024. 
+
+Following RoBERTa (Liu et al., 2019), we use a batch size of 8000, and train the model for 500000 steps. 
+
+Documents are tokenized with the same byte-pair encoding as GPT-2 (Radford et al., 2019). 
+
+Based on the results in Section §4, we use a combination of text infilling and
+sentence permutation. 
+
+We mask 30% of tokens in each document, and permute all sentences. 
+
+Although sentence permutation only shows significant additive gains on the CNN/DM summarization dataset, 
+we hypothesised that larger pre-trained models may be better able to learn from this task. 
+
+To help the model better fit the data, we disabled dropout for the final 10% of training
+steps. 
+
+We use the same pre-training data as Liu et al. (2019), consisting of 160Gb of news, books, stories, and web text.
+```
+
+#### 5.2 Discriminative Tasks
+
+```
+Table 2 compares the performance of BART with several recent approaches on the well-studied SQuAD and GLUE tasks (Warstadt et al., 2018; Socher et al., 2013; Dolan & Brockett, 2005; Agirre et al., 2007; Williams et al., 2018; Dagan et al., 2006; Levesque et al., 2011).
+
+The most directly comparable baseline is RoBERTa, which was pre-trained with the same resources, but a different objective. 
+
+Overall, BART performs similarly, with only small differences between the models on most tasks. 
+
+suggesting that BART’s improvements on generation tasks do not come at the expense of classification performance.
+
 ```
