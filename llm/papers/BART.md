@@ -181,7 +181,7 @@
 
 - BART는 이전 연구 보다 다양한 Noising 방식을 사전 학습에 활용할 수 있음
 
-- 기본 모델(6개의 Encoder와 Decoder Layer, 768개의 Hidden)을 사용하여 다양한 방식을 비교함
+- 기본 모델(6-layer Encoder와 6-layer Decoder, 768개의 Hidden)을 사용하여 다양한 방식을 비교함
     - 5장에서 다룰 대규모 실험의 일부 작업을 기준으로 평가됨
 
 #### 4.1 Comparision Objectives
@@ -232,17 +232,6 @@
     - (2) Decoder에 Target의 접두사로 원천을 추가하며 Sequence의 Target 부분만 Loss로 계산하는 작업
         > - Decoder 입력으로 [원천 + Target] Sequence가 입력되며, Loss는 Target 부분만 계산함
 
-**[Table 1] 사전 학습 방식 비교**
-
-![Table 1](img/bart-tbl-01.png)
-
-```
-- 모든 모델은 유사한 크기이며, 서적과 Wikipedia 데이터를 조합하여 100만 Step 학습됨
-- 아래 두 블록의 항목은 동일한 코드 기반으로 동일한 데이터로 학습되었으며, 동일한 절차로 Fine-tuning 되었음
-- 두번째 블록의 항목은 이전 연구에서 제안된 사전 학습 방식에 영감을 받았지만, 평가 목표에 초점을 맞추어 단순화됨
-- 성능은 작업별로 상당한 차이를 보이지만, Text Infilling을 적용한 BART 모델이 가장 일관성있게 우수한 성능을 보여줌
-```
-
 #### 4.2 Tasks
 
 ##### SQuAD
@@ -274,6 +263,18 @@
 - 뉴스 요약 데이터셋으로, 원문과 밀접하게 연관되어 요약됨
 
 #### 4.3 Results
+
+###### [Table 1] 사전 학습 방식 비교
+
+![Table 1](img/bart-tbl-01.png)
+
+
+```
+- 모든 모델은 유사한 크기이며, 서적과 Wikipedia 데이터를 조합하여 100만 Step 학습됨
+- 아래 두 블록의 항목은 동일한 코드 기반으로 동일한 데이터로 학습되었으며, 동일한 절차로 Fine-tuning 되었음
+- 두번째 블록의 항목은 이전 연구에서 제안된 사전 학습 방식에 영감을 받았지만, 평가 목표에 초점을 맞추어 단순화됨
+- 성능은 작업별로 상당한 차이를 보이지만, Text Infilling을 적용한 BART 모델이 가장 일관성있게 우수한 성능을 보여줌
+```
 
 **사전 학습 방식의 성능은 작업별로 상당히 상이함**
 - 사전 학습 방식의 유효성은 Downstream 작업에 따라 크게 달라짐
@@ -311,9 +312,48 @@
 
 ### 5. Large-scale Pre-training Experiments
 
-**[Table 2]**
+- 최근 연구에서는 큰 batch size와 방대한 말뭉치(Corpus)를 사전 학습시켰을 때 downstream 성능이 극적으로 향상됨을 보여줌
+- 이에 따라 BART 성능을 정확하게 평가하고, downstream 작업에 실질적으로 유용한 모델로 만들기 위해 RoBERTa와 동일한 규모로 BART를 학습시킴
+
+#### 5.1 Experimental Setup
+
+- BART는 12-layer encoder와 12-layer decoder, hidden size 1,024개로 구성된 대규모 모델을 학습함
+- RoBERTa와 동일하게 batch size 8,000개, 총 50만 step으로 사전 학습을 수행함
+- 문서는 GPT-2 tokenizer를 사용해 문서 단위로 쌍을 이루어 encoding됨
+- 4장의 결과를 바탕으로 <u>**text infilling**</u>과 <u>**sentence permutation**</u> 방식의 조합을 사용함
+    - 각 문서의 약 30% token을 masking하고, 모든 문장을 무작위로 섞음
+    - sentence permutation 방식이 CNN/DM 요약 작업에서만 추가 이점을 보였지만, 이 방식으로 대규모 사전 학습 모델이 더 잘 학습될 수 있다고 가정함
+- 모델이 데이터에 더 잘 적합되도록 학습 후반 10% step은 dropout을 사용하지 않음
+- 사전 학습 데이터는 RoBERTa와 동일하게 뉴스, 서적, 스토리, 웹 등 총 160GB 규모를 사용함
+
+#### 5.2 Discriminative Tasks
+
+###### [Table 2] SQuAD 및 GLUE 작업에 대한 대규모 모델 성능 비교
 
 ![Table 2](img/bart-tbl-02.png)
+
+```
+BART는 판별 작업에서 단방향 decoder layer 성능이 저하되지 않았으며, 
+RoBERTa와 XLNet과 비슷한 성능임
+```
+
+- 동일한 자원으로 사전 학습된 RoBERTa가 가장 직접적인 비교 기준이지만, 사전 학습 방식에는 차이가 있음
+- 전반적으로 BART는 유사한 수준의 성능을 보였으며, 대부분의 작업에서 모델 간 성능 차이는 미미함
+    - 이는 생성 작업을 위한 BART가 분류(판별) 성능도 경쟁력 있음을 시사함
+
+#### 5.3 Generation Tasks
+
+- BART는 입력 text로부터 출력 text를 생성하는 표준 seq2seq 모델로 fine-tuning 되었음
+- Fine-tuning 시에는 label smoothing이 적용된 cross-entropy loss를 사용하였으며, smoothing parameter는 0.1로 설정함
+- Text 생성 시에는 beam size를 5로 설정하고, beam search 과정에서 중복된 trigram을 제거함
+    > - 매 token 생성 마다 확률이 높은 5개의 문장을 후보로 두고, 마지막에 가장 확률이 높은 문장을 고름
+    > - 문장의 질을 높이기 위해 3개 연속 반복되는 token이 포함된 문장은 제거함
+
+
+- 평가 데이터셋은 최소/최대 길이 및 길이 보정 계수(Length Penalty)를 적용함
+    > - 긴 문장은 token을 더 많이 생성하므로 전체 확률이 작아져 모델이 짧은 문장을 더 선호할 수 있음
+    > - 이런 상황을 보정해주기 위해 text 길이 관련 parameter를 설정함
+
 
 ---
 
@@ -390,6 +430,7 @@
 # Reference
 
 - [논문 원본](https://arxiv.org/pdf/1910.13461)
+- [ACL 발표 논문 (2020)](https://aclanthology.org/2020.acl-main.703/)
 - [논문 요약](https://velog.io/@tobigs-nlp/BART-DeNoising-Sequence-to-Sequence-Pre-training-for-Natural-Language-Generation-Translation-and-Comprehension)
 - [논문 번역](https://velog.io/@dutch-tulip/BART)
 - [GeLU](https://jik9210.tistory.com/14)
@@ -720,12 +761,6 @@ We find the former works better for BART models, and the latter for other models
 
 To most directly compare our models on their ability to model their fine-tuning objective (the log likelihood of the human text), 
 we report perplexity in Table 1.
-
-Table 1: Comparison of pre-training objectives.
-All models are of comparable size and are trained for 1M steps on a combination of books and Wikipedia data. 
-Entries in the bottom two blocks are trained on identical data using the same code-base, and fine-tuned with the same procedures. 
-Entries in the second block are inspired by pre-training objectives proposed in previous work, but have been simplified to focus on evaluation objectives (see §4.1). 
-Performance varies considerably across tasks, but the BART models with text infilling demonstrate the most consistently strong performance.
 ```
 
 #### 4.2 Tasks
@@ -763,6 +798,12 @@ Summaries here are typically closely related to source sentences.
 #### 4.3 Results
 
 ```
+Table 1: Comparison of pre-training objectives.
+All models are of comparable size and are trained for 1M steps on a combination of books and Wikipedia data. 
+Entries in the bottom two blocks are trained on identical data using the same code-base, and fine-tuned with the same procedures. 
+Entries in the second block are inspired by pre-training objectives proposed in previous work, but have been simplified to focus on evaluation objectives (see §4.1). 
+Performance varies considerably across tasks, but the BART models with text infilling demonstrate the most consistently strong performance.
+
 Results are shown in Table 1. 
 
 Several trends are clear:
@@ -807,8 +848,7 @@ With the exception of ELI5, BART models using text-infilling perform well on all
 Recent work has shown that downstream performance can dramatically improve 
 when pre-training is scaled to large batch sizes (Yang et al., 2019; Liu et al., 2019) and corpora. 
 
-To test how well BART performs in this regime, and to create a useful model for downstream
-tasks, 
+To test how well BART performs in this regime, and to create a useful model for downstream tasks, 
 we trained BART using the same scale as the RoBERTa model.
 ```
 
@@ -838,6 +878,9 @@ We use the same pre-training data as Liu et al. (2019), consisting of 160Gb of n
 #### 5.2 Discriminative Tasks
 
 ```
+Table 2: Results for large models on SQuAD and GLUE tasks. 
+BART performs comparably to RoBERTa and XLNet, suggesting that BART’s uni-directional decoder layers do not reduce performance on discriminative tasks.
+
 Table 2 compares the performance of BART with several recent approaches on the well-studied SQuAD and GLUE tasks (Warstadt et al., 2018; Socher et al., 2013; Dolan & Brockett, 2005; Agirre et al., 2007; Williams et al., 2018; Dagan et al., 2006; Levesque et al., 2011).
 
 The most directly comparable baseline is RoBERTa, which was pre-trained with the same resources, but a different objective. 
@@ -845,5 +888,17 @@ The most directly comparable baseline is RoBERTa, which was pre-trained with the
 Overall, BART performs similarly, with only small differences between the models on most tasks. 
 
 suggesting that BART’s improvements on generation tasks do not come at the expense of classification performance.
+```
 
+#### 5.3 Generation Tasks
+
+```
+We also experiment with several text generation tasks.
+
+BART is fine-tuned as a standard sequence-to-sequence model from the input to the output text. 
+
+During finetuning we use a label smoothed cross entropy loss (Pereyra et al., 2017), with the smoothing parameter set to 0.1. 
+
+During generation, we set beam size as 5, remove duplicated trigrams in beam search, 
+and tuned the model with min-len, max-len, length penalty on the validation set (Fan et al., 2017).
 ```
