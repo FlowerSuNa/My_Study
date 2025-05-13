@@ -5,9 +5,9 @@
 
 ### Summary
 
-#### Architecture
+#### Model Architecture
 
-- BART는 [Denosing Autoencoder](#denosing-autoencoder)로, 표준 Transfomer 기반 MNT(Neural Machine Translation) 구조를 사용함
+- BART는 DAE([Denosing Autoencoder](#denosing-autoencoder))로, 표준 Transfomer 기반 MNT(Neural Machine Translation) 구조를 사용함
     - 다만, feed-forword network는 사용하지 않음
 
 - BART는 양방향(Bidirectional)과 자기회귀(Auto-regressive) Transformer를 결합한 사전 학습 모델임
@@ -36,13 +36,18 @@
 
 - 기계 번역 작업에서는 BART 앞에 word embedding을 위한 작은 encoder를 추가로 학습시킴
     - 추가된 encoder는 별도의 단어 집합(Vocabulary)으로 사용할 수 있음
+    - 먼저 BART의 대부분 parameter를 고정하고, 다음 항목만 학습시킴
+        - 추가된 encoder (무작위로 초기화됨)
+        - BART positional embedding
+        - BART encoder 첫 번째 layer의 self-attention projection matrix
+    - 다음으로 작은 수의 iteration으로 모델의 모든 paramter를 학습시킴
 
 
 ---
 
 ### Abstract
 
-- BART는 seq2seq 구조를 기반으로 한 Denosing Autoencoder임
+- BART는 seq2seq 구조를 기반으로 한 DAE임
     - Text에 임의의 noise를 주어 변형시킨 후, 원본 text로 복원하며 모델을 학습시킴
     - 표준 Transformer 기반 MNT 구조를 사용함
     - 단순한 구조임에도 BERT와 GPT를 포함한 다양한 사전 학습 방식을 일반화함
@@ -59,7 +64,7 @@
 ### 1. Introduction
 
 - Self-supervised 기법들은 NLP 분야에서 뛰어난 성과를 보여주었음
-    - 가장 성공적인 기법은 무작위로 masked text를 복원하도록 학습하는 Denosing Autoencoder, 즉 masked 언어 모델의 변형들임
+    - 가장 성공적인 기법은 무작위로 masked text를 복원하도록 학습하는 DAE, 즉 masked 언어 모델의 변형들임
     - 최근 연구에서는 masked token의 분포, 예측 순서, 대체 가능한 문맥을 개선하는 성과를 달성함
     - 하지만 이 기법들은 특정 end task(span 예측, 생성 등)에만 집중하여 적용 가능성이 제한적임
 
@@ -110,7 +115,7 @@
 
 ### 2. Model
 
-- BART는 손상된 문서를 원본 문서로 복원하는 Denoising Autoencoder임
+- BART는 손상된 문서를 원본 문서로 복원하는 DAE임
     - 손상된 text를 입력으로 받아, 양방향 encoder와 단반향(좌→우) 자기회귀 decoder를 갖춘 seq2seq 모델로 구현됨
     - 사전 학습은 원본 문서에 대한 negative log likelihood를 최소화하는 방식으로 진행됨
 
@@ -129,7 +134,7 @@
 
 - BART는 문서를 손상시킨 후, decoder 출력과 원본 문서 간의 cross-entropy loss를 최소화하는 방식으로 학습됨
 
-- 특정 noising 방식에만 최적화된 Denoising Autoencoder와 달리, BART는 다양한 유형의 손상된 문서를 학습에 활용할 수 있음
+- 특정 noising 방식에만 최적화된 기존 DAE와 달리, BART는 다양한 유형의 손상된 문서를 학습에 활용할 수 있음
     - 원본 정보를 모두 잃은 경우, BART는 일반적인 언어 모델과 동일하게 동작함
     - 잠재력이 있는 새로운 noising 변형 기법을 실험함
 
@@ -175,13 +180,13 @@
 
 - Sequence 분류 시에는 encoder와 decoder에 동일한 입력을 주고, decoder의 마지막 hidden state를 multi-class 분류기에 입력함
     - 이 작업은 BERT의 [CLS token](#cls-token)을 사용하는 방식과 유사함
-    - 다만, BART는 decoder 입력의 끝에 특정 token을 추가하여, 해당 token의 표현이 decoder가 처리한 입력 sequence에 attention 할 수 있도록 설계됨 (***Figure 3a***)
+    - 다만, BART는 decoder 입력의 끝에 특정 token을 추가하며, 이 token의 표현이 decoder가 처리한 입력 sequence에 attention 할 수 있도록 설계됨 (**Figure 3a**)
 
         > - Decoder 입력에 추가된 token의 최종 hidden state가 입력 sequence를 요약한 표현이 되도록 유도함
 
 #### 3.2 Token Classification Tasks
 
-- Token 분류 시에는 SQuAD의 답변 endpoint 분류와 유사하게, 전체 문서를 encoder와 decoder에 입력한 뒤, 각 단어의 표현이 포함된 decoder의 상단 hidden state를 활용해 분류를 수행함
+- Token 분류 시에는 SQuAD의 정답 endpoint 분류와 유사하게, 전체 문서를 encoder와 decoder에 입력한 뒤, 각 단어의 표현이 포함된 decoder의 상단 hidden state를 활용해 분류를 수행함
 
 #### 3.3 Sequence Generation Tasks
 
@@ -197,99 +202,96 @@
 
 - BART는 영어 번역을 위한 기계 번역 decoder의 성능을 향상시킴
     - 선행 연구 Edunov et al. (2019)에서는 사전 학습된 encoder를 통합하여 성능을 향상시켰지만, decoder의 사전 학습 언어 모델 이점은 제한적이었음
-- Bitext(source와 target 언어가 1:1로 매핑된 문자쌍)로 학습된 encoder parameter set을 새로 추가하여, BART(encoder와 decoder 모두)가 기계 번역을 위한 하나의 사전 학습된 decoder로 사용 가능함 (***Figure 3b***)
-    - 보다 정확히는, BART의 embedding layer를 무작위로 초기화된 새로운 Encoder로 교체함
-    - 추가된 Encoder는 외국어 단어를 BART가 복원 가능한 형태의 입력(Noisy 영어)으로 바꾸어 주도록 학습함
 
-- 추가된 Encoder는 두 단계로 학습하며, 역전파(Backpropagation)는 BART 출력에 대한 Cross-entory Loss임
-    - 먼저 BART의 대부분 Parameter를 고정하고, 무작위로 초기화된 Encoder와 BART의 위치 Embedding, BART의 첫 Encoder Layer의 Self-attention 입력인 Projection Matrix를 업데이트함
-    - 다음으로 작은 수의 Iteration으로 모델의 모든 Parameter를 학습함 (End-to-end 학습)
+- Bitext *(source와 target 언어가 1:1로 매핑된 문자쌍)* 로 학습된 encoder parameter set을 새로 추가하여, BART(encoder와 decoder 모두)가 기계 번역을 위한 하나의 사전 학습된 decoder로 사용 가능함 (**Figure 3b**)
+    - 보다 정확히는, BART의 embedding layer를 무작위로 초기화된 새로운 encoder로 교체함
+    - 추가된 encoder는 외국어 단어를 BART가 복원 가능한 형태의 입력(noisy 영어)으로 바꾸어 주도록 학습함
+
+- 추가된 source encoder는 두 단계로 학습하며, 역전파(Backpropagation)는 BART 출력에 대한 cross-entory loss임
+    - 먼저 BART의 대부분 parameter를 고정하고, 무작위로 초기화된 source encoder와 BART positional embedding, BART encoder 첫 번째 layer의 self-attention 입력 projection matrix를 업데이트함
+    - 다음으로 작은 수의 iteration으로 모델의 모든 parameter를 학습함 (end-to-end 학습)
 
 ---
 
 ### 4. Comparing Pre-training Objectives
 
-- BART는 이전 연구 보다 다양한 Noising 방식을 사전 학습에 활용할 수 있음
+- BART는 이전 연구 보다 다양한 noising 기법을 사전 학습에 활용할 수 있음
 
-- 기본 모델(6-layer Encoder와 6-layer Decoder, 768개의 Hidden)을 사용하여 다양한 방식을 비교함
+- 기본 모델(6-layer encoder와 6-layer decoder, 768개의 hidden)을 사용하여 다양한 방식을 비교함
     - 5장에서 다룰 대규모 실험의 일부 작업을 기준으로 평가됨
 
 #### 4.1 Comparision Objectives
 
-- 그동안 다양한 사전 학습 방식(Objective)이 제안되었지만, 학습 데이터와 자원, 모델 구조, Fine-tuning 절차의 차이로 인해 모델 간의 성능을 공정하게 비교하기는 어려움
+- 그동안 다양한 사전 학습 방식(Objective)이 제안되었지만, 학습 데이터와 자원, 모델 구조, fine-tuning 절차의 차이로 인해 모델 간의 성능을 공정하게 비교하기는 어려움
 
-- 이에 본 연구에서는 최근에 제안된 판별 및 생성 작업을 위한 주요 사전 학습 방식을 재구현함
+- 이에 본 연구에서는 판별 및 생성 작업을 위해 제안된 최근 주요 사전 학습 방식을 재구현함
     - 공정한 비교를 위해 사전 학습 방식 외의 요소는 최대한 통제함
-    - 다만, Learning Rate와 Layer 정규화 사용은 성능 향상을 위해 (각 방식에 맞게 별도로 조정하여) 미세하게 변경함
+    - 다만, learning rate와 layer 정규화 사용은 성능 향상을 위해 (각 방식에 맞게 별도로 조정하여) 미세하게 변경함
 
-- 참고로, 구현된 방식은 다양한 서적과 Wikipedia 데이터로 100만 Step 학습된 BERT와 비교함
-    > - BART 구조에 다양한 사전 학습 방식을 적용시켜 BERT와 비교함
-    > - BART의 Denosing Autoencoder와 다른 사전 학습 방식을 비교함
+    - 참고로, 구현된 방식은 다양한 서적과 wikipedia 데이터로 100만 step 학습된 BERT와 비교함
+        > - BART 구조에 다양한 사전 학습 방식을 적용시켜 BERT와 비교함
+        > - BART의 DAE와 다른 사전 학습 방식을 비교하기 위함임
 
 ##### Language Model
 - GPT와 유사하게 단반향(좌→우) Transformer 언어 모델을 학습함
-- 이 모델은 Cross-attention이 제거된 BART Decoder와 구조적으로 동일함
+- 이 모델은 cross-attention이 제거된 BART decoder와 동일함
 
 ##### Permuted Language Model
-- XLNet 기반으로, 전체 Token 중 1/6을 Sampling하여 무작위 순서(Permutation)에 따라 자기회귀적으로 Token을 생성함
-- 다른 모델과의 일관성을 위해 XLNet의 Relative Positional Embedding이나 Segment 간 Attention은 구현하지는 않음
+- XLNet 기반으로, 전체 token 중 1/6을 sampling하여 무작위 순서(Permutation)로 배열하여 자기회귀적으로 token을 생성함
+- 다른 모델과의 일관성을 위해 XLNet의 relative positional embedding이나 segment 간 attention은 구현하지는 않음
 
 ##### Masked Language Model
-- BERT와 동일하게, 전체 Token 중 15%를 `MASK`로 치환하여 원래 Token을 독립적으로 예측하도록 모델을 학습시킴
+- BERT와 동일하게, 전체 token 중 15%를 `MASK`로 치환하여 모델이 원래 token을 독립적으로 예측하도록 학습시킴
 
 ##### Multitask Masked Language Model
-- UniLM에서 제안된 방식으로, 다양한 Self-attention Mask와 함께 Masked 언어 모델을 학습시킴
-- Self-attention Mask는 다음과 같은 비율로 무작위 선택됨
-    - 1/6은 단방향(좌→우) Mask
-    - 1/6은 단방향(우→좌) Mask
-    - 1/3은 Unmasked(양방향)
-    - 1/3은 Token Sequence의 앞 50%는 Unmasked(양방향), 나머지는 단반향(좌→우) Mask
+- UniLM에서 제안된 방식으로, 다양한 self-attention mask 유형을 적용해 Masked LM을 학습시킴
+- self-attention mask 유형은 다음과 같은 비율로 무작위 선택됨
+    - 1/6은 좌→우 mask
+    - 1/6은 우→좌 mask
+    - 1/3은 unmasked *(양방향)*
+    - 1/3은 token sequence의 앞 50%는 unmasked, 나머지는 좌→우 mask
 
 ##### Masked Seq-to-Seq
 
-- MASS에서 영감을 받아, 전체 Token Sequence 중 50%를 차지하는 Span(연속된 Token)을 Masking하고 해당 Span을 예측하도록 Seq2seq 모델을 학습시킴
+- MASS에서 영감을 받아, 전체 token sequence 중 50%를 차지하는 span *(연속된 token)* 을 masking하고 해당 span을 예측하도록 seq2seq 모델을 학습시킴
 
 <br>
 
-- Permuted, Masked, Multitask Masked 언어 모델은 Sequence 출력의 Likelihood를 효율적으로 계산하기 위해 [Two-stream Attention](#two-stream-attention)을 사용함
-    > - 일반적인 자기회귀(Autogressive) 방식은 한 Token 씩 순차적으로 예측하므로 비효율적으로 계산됨
-    > - Two-stream 구조는 전체 Target Sequence의 Likelihood를 동시에 계산할 수 있음
+- Permuted LM, Masked LM, Multitask Masked LM은 sequence 출력의 likelihood를 효율적으로 계산하기 위해 [Two-stream Attention](#two-stream-attention)을 사용함
+    > - 일반적인 자기회귀(Autogressive) 방식은 한 token 씩 순차적으로 예측하므로 비효율적으로 계산됨
+    > - Two-stream 구조는 전체 target sequence의 likelihood를 동시에 계산할 수 있음
 
-    - 이때 Decoder 출력에는 단어를 왼쪽에서 오른쪽으로 예측하도록 Diagonal Self-attention Mask를 사용함
+    - 이때 decoder 출력에는 단어를 왼쪽에서 오른쪽으로 예측하도록 diagonal self-attention mask를 사용함
 
-- 두 종류의 작업을 실험함
-    - (1) 원천 입력을 Encoder로, Target을 Decoder 출력으로 하는 표준 Seq2seq 문제를 처리하는 작업
-    - (2) Decoder에 Target의 접두사로 원천을 추가하며 Sequence의 Target 부분만 Loss로 계산하는 작업
-        > - Decoder 입력으로 [원천 + Target] Sequence가 입력되며, Loss는 Target 부분만 계산함
+- 두 가지 fine-tuning 방식을 실험함
+    - (1) Encoder 입력은 source, decoder 출력은 target인 표준 seq2seq 문제를 처리하는 방식
+    - (2) Target 앞에 source를 추가하여 decoder에 입력하며, sequence의 target 부분만 loss로 계산하는 방식
+        > - Decoder에 [질문 + 답변] 형태의 sequence가 입력되며, loss는 정답 부분만 계산함
+        > - 즉, GPT나 XLNet 같은 decoder-only 모델이 주로 사용하는 방식임
+    - (1) 방식은 BART가, (2) 방식은 다른 모델이 더 잘 작동됨 
 
 #### 4.2 Tasks
 
 ##### SQuAD
-
-- Wikipedia에서 추출된 질의응답 데이터셋으로, 답변은 주어진 문서 내에서 Text Span을 추출함
-- BART는 BERT와 유사하게 질문과 문맥을 Encoder 입력으로 사용하며, Decoder에도 이를 함께 입력함
-    - 이 모델에는 답변의 시작 및 종료 Token 위치를 예측하는 Token-level 분류기가 포함되어 있음
+- Wikipedia에서 추출된 질의응답 데이터셋으로, 정답은 주어진 문서 내에서 추출된 text span임
+- BART는 BERT와 유사하게 질문과 문맥을 encoder 입력으로 사용하며, decoder에도 이를 입력함
+- 이 모델은 정답의 시작 및 종료 token 위치를 예측하는 분류기가 포함되어 있음
 
 ##### MNLI
-
-- 한 문장이 다른 문장을 수반하는지 예측하는 Bitext 분류 작업임
-- Fine-tuning된 모델은 EOS Token을 포함하여 두 문장을 연결하고, BART의 Encoder와 Decoder 모두에 이들을 입력됨
-- BERT와 달리 EOS Token의 표현은 문장 간 관계 분류에 사용함
+- 한 문장이 다른 문장을 수반하는지 예측하는 bitext 분류 작업임
+- Fine-tuning된 모델은 EOS token을 포함하여 두 문장을 연결하고, BART의 encoder와 decoder에 이들을 입력함
+- BERT와 달리 EOS token의 표현을 문장 간 관계 분류에 사용함
 
 ##### ELI5
-
-- 장문의 추상적 질의응답 데이터셋으로, 모델은 질문과 관련 문서를 조합하여 답변을 생성함
+- 장문의 추상적 질의응답 데이터셋으로, 모델은 질문 및 관련 문서를 조합하여 답변을 생성함
 
 ##### XSum
-
 - 뉴스 요약 데이터셋이며, 매우 추상적으로 요약됨
 
 ##### ConvAI2
-
 - 대화 응답 생성 작업으로, 문맥과 한 타인의 응답을 조합함
 
 ##### CNN/DM
-
 - 뉴스 요약 데이터셋으로, 원문과 밀접하게 연관되어 요약됨
 
 #### 4.3 Results
@@ -298,45 +300,44 @@
 
 ![table 1](img/bart-tbl-01.png)
 
-
 ```
-- 모든 모델은 유사한 크기이며, 서적과 Wikipedia 데이터를 조합하여 100만 Step 학습됨
-- 아래 두 블록의 항목은 동일한 코드 기반으로 동일한 데이터로 학습되었으며, 동일한 절차로 Fine-tuning 되었음
+- 모든 모델은 유사한 크기이며, 서적과 wikipedia 데이터를 조합하여 100만 step 학습됨
+- 아래 두 블록의 항목은 동일한 코드 기반으로 동일한 데이터로 학습되었으며, 동일한 절차로 fine-tuning 되었음
 - 두번째 블록의 항목은 이전 연구에서 제안된 사전 학습 방식에 영감을 받았지만, 평가 목표에 초점을 맞추어 단순화됨
 - 성능은 작업별로 상당한 차이를 보이지만, Text Infilling을 적용한 BART 모델이 가장 일관성있게 우수한 성능을 보여줌
 ```
 
 **사전 학습 방식의 성능은 작업별로 상당히 상이함**
-- 사전 학습 방식의 유효성은 Downstream 작업에 따라 크게 달라짐
-- 예를 들어, 간단한 언어 모델은 ELI5에서는 가장 우수한 성능을 보였지만, SQuAD에서는 가장 낮은 성능을 기록함
+- 사전 학습 방식의 유효성은 downstream 작업에 따라 크게 달라짐
+- 예를 들어, 기본 LM은 ELI5에서는 가장 우수한 성능을 보였지만, SQuAD에서는 가장 낮은 성능을 기록함
 
-**Token Masking은 핵심 요소임**
+**Token masking은 핵심 요소임**
 - 문서를 회전시키거나 문장 순서를 섞는 방식의 사전 학습은 성능이 매우 낮았음
-- Token을 제거하거나 Masking하는 방식과 Self-attention Mask를 사용하는 방식이 성공적이었음
-- 특히 생성 작업에서는 Token 제거 방식이 Masking 방식을 능가함
+- Token을 제거하거나 masking하는 방식과 self-attention mask를 사용하는 방식이 성공적이었음
+- 특히 생성 작업에서는 token 제거 방식이 masking 방식을 능가함
 
 **단방향(좌→우) 사전 학습은 생성 성능을 향상시킴**
-- Masked와 Permuted 언어 모델은 사전 학습 시 단방향(좌→우) 자기회귀 언어 모델 구조을 사용하지 않아, 생성 작업에서 성능이 낮았음
+- Masked LM과 Permuted LM은 사전 학습 시 단방향(좌→우) 자기회귀 언어 모델 구조을 사용하지 않아, 생성 작업에서 성능이 낮았음
 
 **양방향 Encoder는 SQuAD 작업에서 중요함**
-- BERT(Devlin et al., 2019)에서 언급했듯이, 분류 결정에서 이후 문맥은 중요하기 때문에 단방향(좌→우) Decoder는 SQuAD 성능이 낮았음 
+- BERT에서 언급했듯이, 분류 결정에서 이후 문맥은 중요하기 때문에 단방향(좌→우) decoder는 SQuAD 성능이 낮았음 
 - 하지만 BART는 절반의 양방향 Layer로 BERT와 유사한 성능을 달성함
-    > - BERT는 12-Layer Encoder(양방향) 구조임
-    > - BART는 6-Layer Encoder(양방향)와 12-Layer Decoder(단방향) 구조임
+    > - BERT는 12-layer encoder(양방향) 구조임
+    > - BART는 6-layer encoder(양방향)와 6-layer decoder(단방향) 구조임
 
 **사전 학습 방식만으로 성능을 결정짓는 요소는 아님**
-- Permuted 언어 모델은 XLNet(Yang et al., 2019) 보다 성능이 나빴음 
-- 다만, Relative-position Embedding과 Segment-level Attention가 구현되지 않았기 때문일 수 있음
+- Permuted LM은 XLNet 보다 성능이 나빴음 
+- 다만, relative-position embedding과 segment-level attention이 구현되지 않았기 때문일 수 있음
 
-**순수 언어 모델은 ELI5에서 성능이 가장 우수함**
+**기본 LM은 ELI5에서 성능이 가장 우수함**
 - ELI5는 이례적인 결과이며, 다른 모델이 BART를 능가하는 유일한 생성 작업임
-- 순수 언어 모델이 가장 우수했으며, BART는 출력이 입력과의 의미적 연결이 약할 때 비효율적일 수 있음
+- 기본 LM이 가장 우수했으며, BART는 출력이 입력과의 의미적 연결이 약할 때 비효율적일 수 있음
     > - BART는 입력을 복원하거나, 입력 기반으로 출력을 구성하는 데 최적화되어 있음
     > - 따라서 입력에 구속받지 않고 자유롭게 생성해야 하는 경우 한계가 있을 수 있음
     > - ELI5는 질문이 짧고 답변이 장문이기 때문에 추상적으로 새로운 문장을 생성하는 능력이 필요함
 
 **BART는 가장 일관성있는 우수한 성능을 달성함**
-- Text-infilling 방식을 사용한 BART 모델은 ELI5을 제외한 모든 작업에서 잘 작동함
+- Text Infilling 방식을 사용한 BART 모델은 ELI5을 제외한 모든 작업에서 잘 작동함
 
 ---
 
@@ -350,9 +351,9 @@
 - BART는 12-layer encoder와 12-layer decoder, hidden size 1,024개로 구성된 대규모 모델을 학습함
 - RoBERTa와 동일하게 batch size 8,000개, 총 50만 step으로 사전 학습을 수행함
 - 문서는 GPT-2 tokenizer를 사용해 문서 단위로 쌍을 이루어 encoding됨
-- 4장의 결과를 바탕으로 <u>**text infilling**</u>과 <u>**sentence permutation**</u> 방식의 조합을 사용함
+- 4장의 결과를 바탕으로 <u>**Text Infilling**</u>과 <u>**Sentence Permutation**</u> 기법의 조합을 사용함
     - 각 문서의 약 30% token을 masking하고, 모든 문장을 무작위로 섞음
-    - sentence permutation 방식이 CNN/DM 요약 작업에서만 추가 이점을 보였지만, 이 방식으로 대규모 사전 학습 모델이 더 잘 학습될 수 있다고 가정함
+    - Sentence Permutation 방식이 CNN/DM 요약 작업에서만 추가 이점을 보였지만, 이 방식으로 대규모 사전 학습 모델이 더 잘 학습될 수 있다고 가정함
 - 모델이 데이터에 더 잘 적합되도록 학습 후반 10% step은 dropout을 사용하지 않음
 - 사전 학습 데이터는 RoBERTa와 동일하게 뉴스, 서적, 스토리, 웹 등 총 160GB 규모를 사용함
 
@@ -363,8 +364,7 @@
 ![table 2](img/bart-tbl-02.png)
 
 ```
-BART는 판별 작업에서 단방향 decoder layer 성능이 저하되지 않았으며, 
-RoBERTa와 XLNet과 비슷한 성능임
+BART는 판별 작업에서 단방향 decoder layer의 성능이 저하되지 않았으며, RoBERTa 및 XLNet과 비슷한 성능임
 ```
 
 - 동일한 자원으로 사전 학습된 RoBERTa가 가장 직접적인 비교 기준이지만, 사전 학습 방식에는 차이가 있음
@@ -376,7 +376,7 @@ RoBERTa와 XLNet과 비슷한 성능임
 - BART는 입력 text로부터 출력 text를 생성하는 표준 seq2seq 모델로 fine-tuning 되었음
 - Fine-tuning 시에는 label smoothing이 적용된 cross-entropy loss를 사용하였으며, smoothing parameter는 0.1로 설정함
 - Text 생성 시에는 beam size를 5로 설정하고, beam search 과정에서 중복된 trigram을 제거함
-    > - 매 token 생성 마다 확률이 높은 5개의 문장을 후보로 두고, 마지막에 가장 확률이 높은 문장을 고름
+    > - 매 token 생성 시 마다 확률이 높은 5개의 문장을 후보로 두고, 마지막에 가장 확률이 높은 문장을 고름
     > - 문장의 질을 높이기 위해 3개 연속 반복되는 token이 포함된 문장은 제거함
 
 
@@ -389,6 +389,13 @@ RoBERTa와 XLNet과 비슷한 성능임
 ###### [Table 3] 두 가지 표준 요약 데이터셋 결과
 
 ![table 3](img/bart-tbl-03.png)
+
+- 최신 요약 모델들과 비교하기 위해, 서로 다른 특성을 가진 두 개의 요약 데이터셋 CNN/DailyMail과 XSum에 대한 실험 결과를 제시함
+- CNN/DailyMail 데이터셋의 요약은 원문과 닮는 경향이 있음
+- 추출 기반 모델이 이 데이터셋에서 잘 작동했으며, 기준점인 Lead-3 (첫 문장부터 세번째 원문)도 상당히 경쟁력이 있었음
+- 그럼에도 BART는 기존 모델들을 능가함
+
+
 
 ##### Dialogue
 
@@ -403,6 +410,11 @@ RoBERTa와 XLNet과 비슷한 성능임
 ![table 5](img/bart-tbl-05.png)
 
 #### 5.4 Translation
+
+- 역번역 데이터로 증강된 WMT16 Romanian-English의 성능을 평가함
+    - 3.4 섹션에서 소개한 방식을 따라, Romanian을 BART가 de-nosing 영어로 변환하도록 하는 표현으로 6-layer Transfomer source encoder를 사용함
+
+- Transformer 구조를 기준으로 결과를 비교함
 
 ###### [Table 6]
 
