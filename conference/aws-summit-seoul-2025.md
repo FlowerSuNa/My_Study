@@ -25,8 +25,8 @@
 - 어디에 거주하고, 어떤 직장에 다니며, 어떤 곳을 여행하는지 등 다양한 생활 패턴이 담겨 있음
 - 이러한 데이터를 기반으로 이탈 가능성, 자동차 구매, 백화점 방문 등 고객 행동을 예측하는 다양한 과제가 생겨남
 - 고객이 생성하는 위치, 소비, 라이프스타일 등 예측 가능한 데이터를 활용해 미션을 수행해야 하는 환경이 됨
-- 이를 위해 데이터와 AI가 통합된 자체 플랫폼 UNIVERSE를 구축함
-- UNIVERSE는 AWS 서비스를 활용해 빠르게 개발할 수 있었음
+- 이를 위해 데이터와 AI가 통합된 자체 플랫폼 [UNIVERSE]를 구축함
+- [UNIVERSE]는 AWS 서비스를 활용해 빠르게 개발할 수 있었음
 - 개발된 플랫폼은 일본 2위 카드사 SMCC에 판매함
 - 이 같은 사례를 바탕으로 글로벌 시장으로의 확장을 계획 중임
 - AWS를 활용함으로써 코드 하나로 다양한 리전에 플랫폼을 셋업할 수 있었음
@@ -36,7 +36,7 @@
 <br>
 
 - `Amazon Nova Foundation Models` : 다양한 업무에 맞는 최적의 모델을 선택할 수 있어, 모델 선택에 대한 고민을 덜어줌
-- `Amazon bedrock` : 보안, 환각(Hallucination) 등 LLM 활용 시 발생할 수 있는 주요 문제들을 효과적으로 완화하고 관리할 수 있음
+- `Amazon Bedrock` : 보안, 환각(Hallucination) 등 LLM 활용 시 발생할 수 있는 주요 문제들을 효과적으로 완화하고 관리할 수 있음
 
 <br>
 
@@ -90,7 +90,7 @@
     - 이러한 개발자 확보의 어려움과 생산성 향상을 해결하기 위해 `Amazon Q Developer`를 개발함
     - 유나이티드 에어라인 사례: 장기간 방치된 자바 버전을 업그레이드하기 위한 마이그레이션 작업을 5명의 개발자가 평균 10분가량 소요하여 2일 만에 완료함
         - 방대한 규모(약 1,000개의 어플리케이션)의 마이그레이션 작업을 `Code Tansformer` 기능을 사용하여 해결함
-        ![alt text](img/image01.png)
+        ![alt text](img/aws2025-01.png)
 
 <br>
 
@@ -98,7 +98,7 @@
 
 - 엔터프라이즈 환경을 위한 생성형 AI 최적화
     - RAG, 프롬프트 관리, 평가 자동화, 보안 강화, 비용 최적화를 `Amazon Bedrock`을 활용하여 간단하게 해결 가능함
-    ![alt text](img/image02.png)
+    ![alt text](img/aws2025-02.png)
     - `Bedrock Knowledge Bases` 기능을 통해 지식 저장소를 구축하고, 다양한 데이터를 저장하거나 벡터 검색을 수행할 수 있음
     - `Bedrock Prompt Management`를 통해 프롬프트를 체계적으로 관리할 수 있음
     - `Bedrock Model Evaluation` 기능을 통해 최적의 파운데이션 모델을 비교 및 선택하고, RAG 워크플로우를 평가할 수 있음
@@ -135,7 +135,8 @@
 ### [생성형 AI] 기업을 위한 생성형 AI 도입, 메가존 클라우드와 함께한 성공적 터닝 포인트
 
 **AI 시대의 기업 과제**
-![alt text](img/image03.png)
+
+![alt text](img/aws2025-03.png)
 
 <br>
 
@@ -163,18 +164,17 @@
 <br>
 
 **미리디 디자인 플랫폼**
-- 미리캔버스는 Claude 3.5를 주요 생성형 AI 모델로 사용함 (`Amazon Bedrock` 사용)
+- 미리캔버스는 Claude 3.5를 주요 생성형 AI 모델로 사용함
     - 자연어 이해와 문맥 처리 능력이 우수해, 프레젠테이션 자동 생성 작업에 적합했음
 
-- 시스템 구조는 Spring과 Amazon Bedrock을 연동해, LangGraph 기반 워크플로우까지 구성하여 사용함
-
+- 시스템 구조는 ***<u>Spring</u>*** 과 `Amazon Bedrock`을 연동해, ***<u>LangGraph</u>*** 기반 워크플로우까지 구성하여 사용함
 - 프레젠테이션 제작 과정은 목차 생성 → 페이지 선택 → 내용 생성 단계로, 이를 자동화함
 - Hallucination을 줄이기 위해 인터넷 검색을 구현함
-    - Claude가 학습하지 않은 콘텐츠가 필요한 경우, Hallucination이 발생되는 것을 발견함
+    - ***<u>Claude</u>*** 가 학습하지 않은 콘텐츠가 필요한 경우, Hallucination이 발생되는 것을 발견함
     - Google 검색, 나무위키, 네이버 블로그 검색을 통해 정보를 보강함
 
 - 이미지는 미리캔버스의 고품질 이미지를 (벡터) 검색하여 사용함 (`Amazon SageMaker`, `Amazon OpenSearch Service` 사용)
-    - AI 이미지는 부자연스럽고, 이미지 생성 비용도 절약할 수 있기 때문임 
+    - AI 이미지는 부자연스러우며, 이미지 생성 비용도 절약할 수 있기 때문임 
 
 <br>
 
@@ -187,21 +187,21 @@
 <br>
 
 **트웰브랩스 영상 이해 모델 개발**
-- Marengo는 영상 검색 모델임 
-- Pegasus는 영상 언어 생성 모델로, 영상 내용 요약, 질의응답, 하이라이트 장면 추출 등을 수행함
+- [Marengo]는 영상 검색 모델임 
+- [Pegasus]는 영상 언어 생성 모델로, 영상 내용 요약, 질의응답, 하이라이트 장면 추출 등을 수행함
 - `Amazon SageMaker HyperPod`을 활용하여 학습과 추론 리소스를 통합관리함으로써, GPU를 가변적으로 사용함
     - GPU 자원을 학습(또는 추론)에 더 사용할지 용도에 따라 유연하게 분배하여 사용할 수 있음
 
-- Marengo는 벡터 기반 검색을 위해 `Amazon Aurora PostgreSQL`과 <u>***pgvector***</u> 를 사용함
+- [Marengo]는 벡터 기반 검색을 위해 `Amazon Aurora PostgreSQL`과 ***<u>pgvector</u>*** 를 사용함
     - 데이터 정합성을 위해 벡터 기반 데이터베이스가 아닌 RDS에서 모든 데이터를 통합하여 사용함
 
-- Pegasus는 데이터 검색 작업의 빈도가 낮다고 판단하여 비용 효율성을 위해 `Amazon S3 Object Storage`에 데이터를 저장함
+- [Pegasus]는 데이터 검색 작업의 빈도가 낮다고 판단하여 비용 효율성을 위해 `Amazon S3 Object Storage`에 데이터를 저장함
 
 - AI 인프라 비용 최적화
-    - `Amazon EKS Cluster`에서 <u>***Karpenter***</u> 를 사용하여 자동으로 노드를 프로비저닝함
+    - `Amazon EKS Cluster`에서 ***<u>Karpenter</u>*** 를 사용하여 자동으로 노드를 프로비저닝함
     - Spot과 On-Demand 인스턴스의 비율을 조정함
     - 인기 있는 인스턴스 확보를 위해 멀티 리전 옵션을 고려함
-    - <u>***KEDA***</u> (Kubernetes-based Event Driven Autoscaler)를 사용하였으며, minReplicas를 0으로 설정함
+    - ***<u>KEDA</u>*** (Kubernetes-based Event Driven Autoscaler)를 사용하였으며, minReplicas를 0으로 설정함
 
 <br>
 
@@ -299,7 +299,7 @@
     - read-only 트랜잭션은 coordination이 전혀 필요 없어 지연 시간의 영향을 받지 않음
     - 장애 상황에서도 빠른 전환이 가능하도록 고가용성을 위한 최적화가 적용됨
 
-- 현재 <u>***프리뷰 상태***</u>로 제공되며, 정식 출시 전 사용자 피드백을 받고 있음
+- 현재 프리뷰 상태로 제공되며, 정식 출시 전 사용자 피드백을 받고 있음
 
 <br>
 
@@ -360,14 +360,13 @@
 - BI, 분석 등 데이터 사용이 급증하면서 리소스 부족 문제도 발생함
 - IDC 리소스 부족, 솔루션 EOS, 불편한 데이터 환경을 개선하기 위해 클라우드 전환, 데이터 통합 및 공유, 데이터 활용성 개선을 추진함
 - ELT 구조로 변경하여 효율성을 높임
-    ![alt text](img/image04.png)
+    ![alt text](img/aws2025-04.png)
 - 사용자는 `Amazon SageMaker`를 통해 하나의 서비스에서 데이터를 활용할 수 있도록 구성함
 - 각 회사의 SSO 페이지를 연동하여 임직원이 바로 사용할 수 있도록 스튜디오를 구현함
 - Oracle 데이터를 Redshift로 변환할 때 데이터 마이그레이션, SQL 최적화, 모델 최적화, Redshift 모니터링을 수행함
-    ![alt text](img/image05.png)
-
+    ![alt text](img/aws2025-05.png)
 - `Amazon Redshift`는 프로비저닝으로 오래 걸리는 작업을 서버리스로 전환하여 데일리 배치 시간을 단축함
-- ***<u>DBT(Data Build Tool)</u>*** 를 활용하여 모델링 및 리니지 관리, 데이터 품질 관리, 데이터 적재 및 이력 추적, 문서화를 자동으로 처리함
+- ***<u>DBT</u>*** (Data Build Tool) 를 활용하여 모델링 및 리니지 관리, 데이터 품질 관리, 데이터 적재 및 이력 추적, 문서화를 자동으로 처리함
 - `Amazon Redshift`와 DBT를 함께 사용하여 파이썬 라이브러리로 쉽게 활용 가능함
     ![alt text](img/image06.png)
 
