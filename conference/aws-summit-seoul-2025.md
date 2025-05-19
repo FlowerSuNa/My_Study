@@ -1,12 +1,24 @@
 # AWS Summit Seoul 2025
 
 ❗일부 내용은 정확히 듣지 못했거나 놓친 부분이 있음
-
 - 기간 : 5월 14일 (수) - 5월 15일 (목)
-
 - [온디맨드 등록](https://aws.amazon.com/ko/events/summits/seoul/agenda/?utm_source=chatgpt.com&aws-summit-korea.sort-by=item.additionalFields.ranking&aws-summit-korea.sort-order=asc&awsf.aws-summit-seoul-level=*all&awsf.aws-summit-seoul-seoul-day1-session=*all&awsf.aws-summit-seoul-seoul-day2-session=*all&awsf.aws-summit-seoul-topic=*all)
-
     - 공개 기간 : 6월 2일 (월) 오전 9시 - 8월 12일 (금) 오후 6시
+- 목차
+    - Day 1 (5/14)
+        - 기조연설
+        - [여행 및 숙박] 여행 goes AI! AWS 생성형 AI 없이는 살아남을 수 없어!
+        - [리테일 및 소비재] 생성형 AI 기반 쿠팡 광고의 고객을 위한 혁신
+        - [생성형 AI] 기업을 위한 생성형 AI 도입, 메가존 클라우드와 함께한 성공적 터닝 포인트
+        - [소프트웨어 및 인터넷] 생성형 AI와 디자인의 만남: Amazon Bedrock과 Claude 3.5로 혁신한 미리캔버스
+        - [생성형 AI] 초거대 영상 이해 모델 스타트업 트웰브랩스의 AI 인프라 고도화 여정
+        - [기술 트랜드] 계산과학의 혁명적 전환점: 양자 컴퓨팅 기술과 Amazon Braket이 여는 미래
+    - Day 2 (5/15)
+        - 기조연설
+        - [데이터베이스] 서버리스 분산 SQL DB: Amazon Aurora DSQL의 아키텍처 알아보기
+        - [개발자 역량강화] Amazon Q Developer 애플리케이션 현대화의 신(神)
+        - [데이터 분석 현대화] Exadata에서 Redshift로: 클라우드 마이그레이션 여정
+        - [AWS 커뮤니티] 생성형 AI 기반 리뷰 검수 자동화 및 맞춤형 체형 상품 추천
 
 ---
 

@@ -7,15 +7,11 @@
 
 #### Model Architecture
 
-- BART는 DAE([Denosing Autoencoder](#denosing-autoencoder))로, 표준 Transfomer 기반 MNT(Neural Machine Translation) 구조를 사용함
-    - 다만, feed-forword network는 사용하지 않음
-
-- BART는 양방향(Bidirectional)과 자기회귀(Auto-regressive) Transformer를 결합한 사전 학습 모델임
-    - BERT와 GPT를 포함한 다양한 사전 학습 방식을 일반화함
-
+- BART는 DAE([Denosing Autoencoder](#denosing-autoencoder))로, 표준 Transfomer 기반 MNT(Neural Machine Translation) 구조임
+- 다만, 단어 예측 전에 FFN(feed-forword network)은 사용하지 않음
+- BART는 양방향(Bidirectional)과 자기회귀(Auto-regressive) Transformer를 결합한 사전 학습 모델임 ➡️ BERT와 GPT를 포함한 다양한 사전 학습 방식(Pre-training Objective)을 일반화함
 - BART의 기본 모델은 6-layer encoder와 6-layer decoder로 구성되며, 대형 모델은 각 12-layer를 사용함
-
-    - Activation 함수는 [GeLU](#gelu)를 사용하고, parameter는 N(0, 0.02) 분포로 초기화함
+- Activation 함수는 [GeLU](#gelu)를 사용하고, parameter는 N(0, 0.02) 분포로 초기화함
 
 #### Noising Method
 
@@ -26,14 +22,12 @@
 #### Pre-training Objective
 
 - 사전 학습은 원본 문서에 대한 negative log likelihood를 최소화하는 방식으로 진행됨
-
 - BART는 손상된 문서를 encoder와 decoder에 입력하며, decoder의 출력과 원본 문서 간의 cross-entropy loss를 최소화하는 방식으로 학습됨
 
 #### Fine-tuning
 
 - 분류 작업에서 BART는 encoder와 decoder에 동일한 입력을 주고, 마지막 출력의 표현을 multi-class 분류기에 입력함
     - Decoder 입력 끝에 특정 token을 추가하여, 해당 token의 최종 hidden state가 입력 sequence를 요약한 표현이 되도록 유도함
-
 - 기계 번역 작업에서는 BART 앞에 word embedding을 위한 작은 encoder를 추가로 학습시킴
     - 추가된 encoder는 별도의 단어 집합(Vocabulary)으로 사용할 수 있음
     - 먼저 BART의 대부분 parameter를 고정하고, 다음 항목만 학습시킴
@@ -42,32 +36,39 @@
         - BART encoder 첫 번째 layer의 self-attention projection matrix
     - 다음으로 작은 수의 iteration으로 모델의 모든 paramter를 학습시킴
 
+#### Performance
+
+- BART의 주요 장점은 noising의 유연성으로, 다양한 유형의 손상된 문서를 학습에 활용할 수 있음
+- BART는 text 생성 작업을 위한 fine-tuning에서 특히 효과적이었지만, 이해력이 요구되는 작업에서도 잘 작동함
+- 즉, BART는 다양한 downstream 작업에서 일관된 강력한 성능을 보임
+- [GLUE](#glue) 및 [SQuAD](#squad) benchmark에서는 [RoBERTa](#roberta)와 유사한 학습 자원 하에서 비슷한 성능을 기록함
+- 추상적 대화, 질의응답, 요약 작업에서는 최고 성능(최대 6 ROUNGE 포인트 향상)을 달성함
+- 또한, 기계 번역 작업에서는 target 언어에 대한 사전 학습만으로도 역번역([Back-translation](#back-translation)) 방식보다 1.1 [BLEU](#bleu) (Bilingual Evaluation Understudy) 향상함
+- BART는 출력이 입력과의 의미적 연결이 약할 때 비효율적일 수 있음
+
 
 ---
 
-### Abstract
+## Abstract
 
 - BART는 seq2seq 구조를 기반으로 한 DAE임
     - Text에 임의의 noise를 주어 변형시킨 후, 원본 text로 복원하며 모델을 학습시킴
     - 표준 Transformer 기반 MNT 구조를 사용함
     - 단순한 구조임에도 BERT와 GPT를 포함한 다양한 사전 학습 방식을 일반화함
-
 - 원본 문장들의 순서를 무작위로 섞고, span이 하나의 mask token으로 치환되는 기법을 사용할 때 가장 우수한 성능을 보였음
-
 - BART는 text 생성 작업을 위한 fine-tuning에서 특히 효과적이었지만, 이해력이 요구되는 작업에서도 잘 작동함
-    - [GLUE](#glue) 및 [SQuAD](#squad) benchmark에서는 [RoBERTa](#roberta)와 유사한 학습 자원 하에서 비슷한 성능을 기록함
+    - GLUE 및 SQuAD benchmark에서는 RoBERTa와 유사한 학습 자원 하에서 비슷한 성능을 기록함
     - 추상적 대화, 질의응답, 요약 작업에서는 최고 성능(최대 6 ROUNGE 포인트 향상)을 달성함
-    - 또한, 기계 번역 작업에서는 target 언어에 대한 사전 학습만으로도 역번역([Back-translation](#back-translation)) 방식보다 1.1 [BLEU](#bleu) (Bilingual Evaluation Understudy) 향상함
+    - 또한, 기계 번역 작업에서는 target 언어에 대한 사전 학습만으로도 역번역 방식보다 1.1 BLEU 향상함
 
 ---
 
-### 1. Introduction
+## 1. Introduction
 
 - Self-supervised 기법들은 NLP 분야에서 뛰어난 성과를 보여주었음
-    - 가장 성공적인 기법은 무작위로 masked text를 복원하도록 학습하는 DAE, 즉 masked 언어 모델의 변형들임
+    - 가장 성공적인 기법은 무작위로 masked text를 복원하도록 학습하는 DAE, 즉 Masked LM(Language Model)의 변형들임
     - 최근 연구에서는 masked token의 분포, 예측 순서, 대체 가능한 문맥을 개선하는 성과를 달성함
     - 하지만 이 기법들은 특정 end task(span 예측, 생성 등)에만 집중하여 적용 가능성이 제한적임
-
 - 본 논문에서는 양방향과 자기회귀 Transformer를 결합한 사전 학습 모델인 BART를 제안함
     - BART는 다양한 end Task에 적용 가능한 seq2seq 기반 Denosing Autoencoder임
     - 사전 학습은 text를 임의의 nosing 함수로 변형한 후, seq2seq 모델이 원본 text로 복구하도록 학습하는 방식임
@@ -94,46 +95,39 @@
 - BART의 주요 장점은 noising의 유연성으로, 원본 text 길이 변경을 포함해 다양한 변형이 가능함
     - 다양한 noising 기법을 평가한 결과, 원본 문장을 랜덤하게 섞은 후, 길이 0을 포함한 임의 길이의 span을 하나의 mask token으로 치환하는 기법을 사용하는 것이 가장 우수한 성능 보임
     - 이 기법은 모델이 전체 문장 길이에 대해 더 깊이 추론하고 입력보다 더 긴 변환을 하도록 강제하여, BERT의 원본 단어 masking과 NSP 방식을 일반화함
-
 - BART는 text 생성 작업을 위해 fine-tuning 되었을 때 특히 효과적이었으며, 이해력이 요구되는 작업에서도 잘 작동함
     - GLUE, SQuAD와 같은 benchmark에서는 RoBERTa와 유사한 학습 자원 하에서 비슷한 성능을 기록하고, 추상적 대화, 질의응답, 요약 작업에서 최고 성능을 달성함
     - 예를 들어, XSum benchmark에서는 이전 연구 대비 ROUNGE 점수 6점이 향상됨
-
 - 또한, BART는 fine-tuning에 대한 새로운 접근 방식을 제안함
     - BART 모델 위에 몇 개의 추가 Transformer layer를 쌓는 새로운 기계 번역 방식을 제안함
     - 이 layer들은 BART의 전파(Propagation)를 통해 외국어를 Noisy 영어로 번역하도록 학습되며, 이를 통해 BART를 사전 학습된 target 언어 모델로 활용함
-
         > - BART는 사전 학습할 때 영어 문장을 손상시키고, 그 손상된 영어를 다시 원래 영어로 복원하는 방식으로 학습된 모델임
         > - 즉, noisy 영어를 de-noised 영어로 복구를 잘하는 모델임
         > - 따라서 추가된 Transformer layer로 외국어를 noisy 영어로 변환해주면, BART는 noisy 영어를 de-noised 영어로 자연스럽게 복원함 
-
     - 이 방식은 WMT Romanian-English benchmark에서 기존 역번역 모델 대비 1.1 BLEU 만큼 성능을 향상시킴
-
 - BART는 다양한 작업에서 일관된 강력한 성능을 보임 
 
 ---
 
-### 2. Model
+## 2. Model
 
 - BART는 손상된 문서를 원본 문서로 복원하는 DAE임
     - 손상된 text를 입력으로 받아, 양방향 encoder와 단반향(좌→우) 자기회귀 decoder를 갖춘 seq2seq 모델로 구현됨
     - 사전 학습은 원본 문서에 대한 negative log likelihood를 최소화하는 방식으로 진행됨
 
-#### 2.1 Architecture
+### 2.1 Architecture
 
 - BART는 표준 seq2seq Transformer 구조를 사용함
     - GPT와 동일하게 activation 함수를 ReLU 대신 GeLU로 변경하고, parameter를 N(0, 0.02) 분포로 초기화함
     - 기본 모델은 6개의 encoder와 decoder layer를 사용하고, 대형 모델은 12개의 layer를 사용함
-
 - BART 구조는 BERT와 밀접한 관련이 있지만 다음과 같은 차이점이 있음
     - Decoder의 각 layer는 encoder의 마지막 hidden layer에 대해 추가적인 cross-attention을 수행함
-    - BERT는 단어 예측 전에 feed-forword network를 추가로 사용하지만, BART는 사용하지 않음
+    - BERT는 단어 예측 전에 FFN을 추가로 사용하지만, BART는 사용하지 않음
     - 전체적으로 BART는 동일 크기의 BERT 모델보다 약 10% 더 많은 parameter를 가짐
 
-#### 2.2 Pre-training BART
+### 2.2 Pre-training BART
 
 - BART는 문서를 손상시킨 후, decoder 출력과 원본 문서 간의 cross-entropy loss를 최소화하는 방식으로 학습됨
-
 - 특정 noising 방식에만 최적화된 기존 DAE와 달리, BART는 다양한 유형의 손상된 문서를 학습에 활용할 수 있음
     - 원본 정보를 모두 잃은 경우, BART는 일반적인 언어 모델과 동일하게 동작함
     - 잠재력이 있는 새로운 noising 변형 기법을 실험함
@@ -162,7 +156,7 @@
 
 ---
 
-### 3. Fine-tuning BART
+## 3. Fine-tuning BART
 
 - BART가 생성한 표현은 다양한 downstream 작업에 활용될 수 있음
 
@@ -176,15 +170,14 @@
     이 추가된 encoder는 별도의 단어 집합(Vocabulary)으로 사용할 수 있음
 ```
 
-#### 3.1 Sequence Classification Tasks
+### 3.1 Sequence Classification Tasks
 
 - Sequence 분류 시에는 encoder와 decoder에 동일한 입력을 주고, decoder의 마지막 hidden state를 multi-class 분류기에 입력함
     - 이 작업은 BERT의 [CLS token](#cls-token)을 사용하는 방식과 유사함
     - 다만, BART는 decoder 입력의 끝에 특정 token을 추가하며, 이 token의 표현이 decoder가 처리한 입력 sequence에 attention 할 수 있도록 설계됨 (**Figure 3a**)
-
         > - Decoder 입력에 추가된 token의 최종 hidden state가 입력 sequence를 요약한 표현이 되도록 유도함
 
-#### 3.2 Token Classification Tasks
+### 3.2 Token Classification Tasks
 
 - Token 분류 시에는 SQuAD의 정답 endpoint 분류와 유사하게, 전체 문서를 encoder와 decoder에 입력한 뒤, 각 단어의 표현이 포함된 decoder의 상단 hidden state를 활용해 분류를 수행함
 
@@ -192,42 +185,35 @@
 
 - BART는 자기회귀 decoder를 갖추고 있어, 추상적인 질의응답과 요약과 같은 sequence 생성 작업을 직접 수행할 수 있음
     - 이 두 작업은 정보를 입력으로부터 복사해 활용하며, denoising 사전 학습 방식과 밀접하게 연관되어 작동함
-
         > - BART의 사전 학습 방식은 noisy 데이터를 복원하는 학습임 (denosing)
         > - 따라서 질의응답이나 요약처럼 입력 일부를 기반으로 출력을 생성하는 작업은 BART의 학습 구조 자체가 잘 맞아 떨어짐
-
     - 이때 encoder의 입력은 입력 sequence이며, decoder는 자기회귀적으로 출력을 생성함
 
-#### 3.4 Machine Translation
+### 3.4 Machine Translation
 
 - BART는 영어 번역을 위한 기계 번역 decoder의 성능을 향상시킴
-    - 선행 연구 Edunov et al. (2019)에서는 사전 학습된 encoder를 통합하여 성능을 향상시켰지만, decoder의 사전 학습 언어 모델 이점은 제한적이었음
-
+    - 선행 연구 Edunov et al. (2019)에서는 사전 학습된 encoder를 통합하여 성능을 향상시켰지만, decoder의 사전 학습 LM 이점은 제한적이었음
 - Bitext *(source와 target 언어가 1:1로 매핑된 문자쌍)* 로 학습된 encoder parameter set을 새로 추가하여, BART(encoder와 decoder 모두)가 기계 번역을 위한 하나의 사전 학습된 decoder로 사용 가능함 (**Figure 3b**)
     - 보다 정확히는, BART의 embedding layer를 무작위로 초기화된 새로운 encoder로 교체함
-    - 추가된 encoder는 외국어 단어를 BART가 복원 가능한 형태의 입력(noisy 영어)으로 바꾸어 주도록 학습함
-
+    - 추가된 encoder는 외국어 단어를 BART가 복원 가능한 형태의 입력 *(noisy 영어)* 으로 바꾸어 주도록 학습함
 - 추가된 source encoder는 두 단계로 학습하며, 역전파(Backpropagation)는 BART 출력에 대한 cross-entory loss임
     - 먼저 BART의 대부분 parameter를 고정하고, 무작위로 초기화된 source encoder와 BART positional embedding, BART encoder 첫 번째 layer의 self-attention 입력 projection matrix를 업데이트함
     - 다음으로 작은 수의 iteration으로 모델의 모든 parameter를 학습함 (end-to-end 학습)
 
 ---
 
-### 4. Comparing Pre-training Objectives
+## 4. Comparing Pre-training Objectives
 
 - BART는 이전 연구 보다 다양한 noising 기법을 사전 학습에 활용할 수 있음
-
 - 기본 모델(6-layer encoder와 6-layer decoder, 768개의 hidden)을 사용하여 다양한 방식을 비교함
     - 5장에서 다룰 대규모 실험의 일부 작업을 기준으로 평가됨
 
-#### 4.1 Comparision Objectives
+### 4.1 Comparision Objectives
 
 - 그동안 다양한 사전 학습 방식(Objective)이 제안되었지만, 학습 데이터와 자원, 모델 구조, fine-tuning 절차의 차이로 인해 모델 간의 성능을 공정하게 비교하기는 어려움
-
 - 이에 본 연구에서는 판별 및 생성 작업을 위해 제안된 최근 주요 사전 학습 방식을 재구현함
     - 공정한 비교를 위해 사전 학습 방식 외의 요소는 최대한 통제함
     - 다만, learning rate와 layer 정규화 사용은 성능 향상을 위해 (각 방식에 맞게 별도로 조정하여) 미세하게 변경함
-
     - 참고로, 구현된 방식은 다양한 서적과 wikipedia 데이터로 100만 step 학습된 BERT와 비교함
         > - BART 구조에 다양한 사전 학습 방식을 적용시켜 BERT와 비교함
         > - BART의 DAE와 다른 사전 학습 방식을 비교하기 위함임
@@ -252,25 +238,22 @@
     - 1/3은 token sequence의 앞 50%는 unmasked, 나머지는 좌→우 mask
 
 ##### Masked Seq-to-Seq
-
 - MASS에서 영감을 받아, 전체 token sequence 중 50%를 차지하는 span *(연속된 token)* 을 masking하고 해당 span을 예측하도록 seq2seq 모델을 학습시킴
 
 <br>
 
 - Permuted LM, Masked LM, Multitask Masked LM은 sequence 출력의 likelihood를 효율적으로 계산하기 위해 [Two-stream Attention](#two-stream-attention)을 사용함
-    > - 일반적인 자기회귀(Autogressive) 방식은 한 token 씩 순차적으로 예측하므로 비효율적으로 계산됨
+    > - 일반적인 자기회귀 방식은 한 token 씩 순차적으로 예측하므로 비효율적으로 계산됨
     > - Two-stream 구조는 전체 target sequence의 likelihood를 동시에 계산할 수 있음
-
     - 이때 decoder 출력에는 단어를 왼쪽에서 오른쪽으로 예측하도록 diagonal self-attention mask를 사용함
-
 - 두 가지 fine-tuning 방식을 실험함
     - (1) Encoder 입력은 source, decoder 출력은 target인 표준 seq2seq 문제를 처리하는 방식
     - (2) Target 앞에 source를 추가하여 decoder에 입력하며, sequence의 target 부분만 loss로 계산하는 방식
         > - Decoder에 [질문 + 답변] 형태의 sequence가 입력되며, loss는 정답 부분만 계산함
-        > - 즉, GPT나 XLNet 같은 decoder-only 모델이 주로 사용하는 방식임
+        > - GPT나 XLNet 같은 decoder-only 모델이 주로 사용하는 방식임
     - (1) 방식은 BART가, (2) 방식은 다른 모델이 더 잘 작동됨 
 
-#### 4.2 Tasks
+### 4.2 Tasks
 
 ##### SQuAD
 - Wikipedia에서 추출된 질의응답 데이터셋으로, 정답은 주어진 문서 내에서 추출된 text span임
@@ -294,7 +277,7 @@
 ##### CNN/DM
 - 뉴스 요약 데이터셋으로, 원문과 밀접하게 연관되어 요약됨
 
-#### 4.3 Results
+### 4.3 Results
 
 ###### [Table 1] 사전 학습 방식 비교
 
@@ -341,12 +324,12 @@
 
 ---
 
-### 5. Large-scale Pre-training Experiments
+## 5. Large-scale Pre-training Experiments
 
 - 최근 연구에서는 큰 batch size와 방대한 말뭉치(Corpus)를 사전 학습시켰을 때 downstream 성능이 극적으로 향상됨을 보여줌
 - 이에 따라 BART 성능을 정확하게 평가하고, downstream 작업에 실질적으로 유용한 모델로 만들기 위해 RoBERTa와 동일한 규모로 BART를 학습시킴
 
-#### 5.1 Experimental Setup
+### 5.1 Experimental Setup
 
 - BART는 12-layer encoder와 12-layer decoder, hidden size 1,024개로 구성된 대규모 모델을 학습함
 - RoBERTa와 동일하게 batch size 8,000개, 총 50만 step으로 사전 학습을 수행함
@@ -357,7 +340,7 @@
 - 모델이 데이터에 더 잘 적합되도록 학습 후반 10% step은 dropout을 사용하지 않음
 - 사전 학습 데이터는 RoBERTa와 동일하게 뉴스, 서적, 스토리, 웹 등 총 160GB 규모를 사용함
 
-#### 5.2 Discriminative Tasks
+### 5.2 Discriminative Tasks
 
 ###### [Table 2] SQuAD 및 GLUE 작업에 대한 대규모 모델 성능 비교
 
@@ -371,7 +354,7 @@ BART는 판별 작업에서 단방향 decoder layer의 성능이 저하되지 �
 - 전반적으로 BART는 유사한 수준의 성능을 보였으며, 대부분의 작업에서 모델 간 성능 차이는 미미함
     - 이는 생성 작업을 위한 BART가 분류(판별) 성능도 경쟁력 있음을 시사함
 
-#### 5.3 Generation Tasks
+### 5.3 Generation Tasks
 
 - BART는 입력 text로부터 출력 text를 생성하는 표준 seq2seq 모델로 fine-tuning 되었음
 - Fine-tuning 시에는 label smoothing이 적용된 cross-entropy loss를 사용하였으며, smoothing parameter는 0.1로 설정함
