@@ -1,5 +1,17 @@
 # LangChain
 
+- LLM 기반 애플리케이션 개발을 위한 프레임워크
+- Chain과 Agent라는 두 가지 핵심 기능을 통해 LLM 애플리케이션을 효율적으로 개발하도록 지원
+    - Chain : 작업을 순차적으로 실행하는 파이프라인 구조 제공
+    - Agent : 자율적 의사결정이 가능한 실행 단위
+
+
+<div style="text-align: center;">
+    <img src="https://python.langchain.com/svg/langchain_stack_112024_dark.svg" 
+        alt="langchain_stack" 
+        width="600" 
+        style="border: 0;">
+</div>
 
 ## 등장 배경
 
