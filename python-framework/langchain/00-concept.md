@@ -1,10 +1,10 @@
 # LangChain
 
-- LLM 기반 애플리케이션 개발을 위한 프레임워크
-- Chain과 Agent라는 두 가지 핵심 기능을 통해 LLM 애플리케이션을 효율적으로 개발하도록 지원
+- LLM 기반 애플리케이션 개발을 위한 프레임워크임
+- Chain과 Agent라는 두 가지 핵심 기능을 통해 LLM 애플리케이션을 효율적으로 개발하도록 지원함
     - Chain : 작업을 순차적으로 실행하는 파이프라인 구조 제공
     - Agent : 자율적 의사결정이 가능한 실행 단위
-
+        - 최근에는 복잡한 흐름 제어를 위해 `LangGraph` 기반으로 확장하여 구현하기도 함
 
 <div style="text-align: center;">
     <img src="https://python.langchain.com/svg/langchain_stack_112024_dark.svg" 
@@ -13,20 +13,28 @@
         style="border: 0;">
 </div>
 
+
 ## 등장 배경
 
 - LLM을 사용하여 요구 사항에 따라 사용자 질의를 해석할 필요성이 생김
-
 - 이전부터 여러 시스템이나 백엔드 툴을 이용해야 하는 요구 사항이 흔하게 있음
     - 애플리케이션이 두 가지 이상의 DB가 필요할 때 매번 DB 접속을 위한 커넥터를 새로 만들면, 비용이 비쌈 (전문 개발자 필요, 유지/보수/관리/배포 오버헤드 발생)
     - DBMS에 엑세스 하기 위한 표준 API 레이어인 **ODBC**(Open Database Connectivity)와 **JDBC**(Java Database Connectivity)가 등장함
     - 이런 표준 API 레이어는 DB 시스템과 운영체제가 독립적으로 동작함
     - 따라서 애플리케이션에서 데이터 액세스 코드를 거의 변경하지 않고도 클라이언트와 서버의 다른 플랫폼으로 인식할 수 있다는 장점이 있음
-
-
 - LangChain은 LLM 기반 애플리케이션 개발을 위한 개발자 친화적인 오픈 소스 프레임워크임
     - Python과 JavaScript 라이브러리를 제공함
     - LLM 애플리케이션을 구축한 다음 통합할 수 있는 중앙 집중식 개발 환경을 갖추고 있음
+
+
+## 구성 요소 (Components)
+
+- Model: 텍스트 생성의 중심으로, 일반 텍스트 입력(LLM) 또는 메시지 기반 입력(Chat Model)을 처리함
+- Prompt & Memory: 프롬프트 구성과 대화 히스토리 관리를 통해 일관된 맥락 유지 가능
+- Document Handling: Document Loader, Text Splitter를 통해 외부 문서를 불러오고, 처리 가능한 단위로 분할함
+- Embedding & Vector Store: 문서를 벡터화하고 Vectorstore에 저장하여 유사도 기반 검색을 수행함
+- 각 컴포넌트는 독립적이며, 모듈형 구조로 다양한 조합이 가능함 (ex. RAG 시스템 구축)
+
 
 ## 개념
 

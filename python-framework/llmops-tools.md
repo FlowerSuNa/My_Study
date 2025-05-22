@@ -38,3 +38,17 @@
 - SaaS 형태와 Self-hosting 모두 가능함
 - Prompt 관리보다는 전반적인 호출 추적 및 품질 모니터링에 초점이 맞춰져 있음
 - 프론트엔드 구성은 없음, 백엔드 중심 도구임
+
+# LlamaIndex
+
+- [GitHub](https://github.com/run-llama/llama_index)
+- LlamaIndex는 비정형 데이터를 LLM과 연결해주는 데이터 연결 프레임워크임
+- 외부 문서(PDF, Notion, 웹 등)를 LLM이 이해할 수 있는 형태로 가공하고 인덱싱함
+- Retriever, Query Engine, Storage 등 모듈로 구성되어 있음
+- 문서를 청크 단위로 나눈 뒤 벡터화하여 검색 효율성을 높임
+- RAG(Retrieval-Augmented Generation) 구조를 쉽게 구현할 수 있음
+- 다양한 벡터 스토어(FAISS, Chroma 등) 및 LLM 프레임워크(LangChain, OpenAI 등)와 호환됨
+- 자체 Query Pipeline으로 프롬프트 구성 및 응답 제어가 가능함
+- 문서 기반 Q&A, 요약, 분류, 검색 등 다양한 태스크에 활용됨
+- 내부 문서나 사내 지식 검색용 챗봇 등에 자주 사용됨
+- 빠른 프로토타이핑과 맞춤형 LLM 어플리케이션 구축에 적합함

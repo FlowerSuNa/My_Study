@@ -16,6 +16,7 @@
 #### Noising Method
 
 - [Sentence Permutation](#sentence-permutation)과 [Text Infilling](#text-infilling) 기법으로 noisy text를 사용할 때 가장 우수한 성능을 보였음
+    - 각 문서의 약 30% token을 masking하고, 모든 문장을 무작위로 섞음
     - 이 기법으로 모델이 전체 문장 길이에 대해 더 깊이 추론하고 입력보다 더 긴 변환을 하도록 강제함
     - 즉, BERT의 단어 수준 masking과 NSP(Next Sentence Prediction) 방식을 포괄함
 
@@ -23,6 +24,10 @@
 
 - 사전 학습은 원본 문서에 대한 negative log likelihood를 최소화하는 방식으로 진행됨
 - BART는 손상된 문서를 encoder와 decoder에 입력하며, decoder의 출력과 원본 문서 간의 cross-entropy loss를 최소화하는 방식으로 학습됨
+- BART의 기본 모델은 다양한 서적과 wikipedia 데이터로 100만 step 학습함
+- BART의 대형 모델은 RoBERTa와 동일하게 뉴스, 서적, 스토리, 웹 등 총 160GB 규모의 데이터를 사용함
+    - RoBERTa와 동일하게 batch size 8,000개, 총 50만 step으로 사전 학습을 수행함
+    - 모델이 데이터에 더 잘 적합되도록 학습 후반 10% step은 dropout을 사용하지 않음
 
 #### Fine-tuning
 
@@ -35,6 +40,10 @@
         - BART positional embedding
         - BART encoder 첫 번째 layer의 self-attention projection matrix
     - 다음으로 작은 수의 iteration으로 모델의 모든 paramter를 학습시킴
+**Generation Tasks**
+- 입력 text로부터 출력 text를 생성하는 표준 seq2seq 모델로 fine-tuning 되었음
+- [label smoothing]이 적용된 cross-entropy loss를 사용하였으며, smoothing parameter는 0.1로 설정함
+- [beam search]
 
 #### Performance
 
@@ -42,7 +51,7 @@
 - BART는 text 생성 작업을 위한 fine-tuning에서 특히 효과적이었지만, 이해력이 요구되는 작업에서도 잘 작동함
 - 즉, BART는 다양한 downstream 작업에서 일관된 강력한 성능을 보임
 - [GLUE](#glue) 및 [SQuAD](#squad) benchmark에서는 [RoBERTa](#roberta)와 유사한 학습 자원 하에서 비슷한 성능을 기록함
-- 추상적 대화, 질의응답, 요약 작업에서는 최고 성능(최대 6 ROUNGE 포인트 향상)을 달성함
+- 추상적 대화, 질의응답, 요약 작업에서는 최고 성능(최대 6 ROUGE 포인트 향상)을 달성함
 - 또한, 기계 번역 작업에서는 target 언어에 대한 사전 학습만으로도 역번역([Back-translation](#back-translation)) 방식보다 1.1 [BLEU](#bleu) (Bilingual Evaluation Understudy) 향상함
 - BART는 출력이 입력과의 의미적 연결이 약할 때 비효율적일 수 있음
 
@@ -58,7 +67,7 @@
 - 원본 문장들의 순서를 무작위로 섞고, span이 하나의 mask token으로 치환되는 기법을 사용할 때 가장 우수한 성능을 보였음
 - BART는 text 생성 작업을 위한 fine-tuning에서 특히 효과적이었지만, 이해력이 요구되는 작업에서도 잘 작동함
     - GLUE 및 SQuAD benchmark에서는 RoBERTa와 유사한 학습 자원 하에서 비슷한 성능을 기록함
-    - 추상적 대화, 질의응답, 요약 작업에서는 최고 성능(최대 6 ROUNGE 포인트 향상)을 달성함
+    - 추상적 대화, 질의응답, 요약 작업에서는 최고 성능(최대 6 ROUGE 포인트 향상)을 달성함
     - 또한, 기계 번역 작업에서는 target 언어에 대한 사전 학습만으로도 역번역 방식보다 1.1 BLEU 향상함
 
 ---
@@ -97,7 +106,7 @@
     - 이 기법은 모델이 전체 문장 길이에 대해 더 깊이 추론하고 입력보다 더 긴 변환을 하도록 강제하여, BERT의 원본 단어 masking과 NSP 방식을 일반화함
 - BART는 text 생성 작업을 위해 fine-tuning 되었을 때 특히 효과적이었으며, 이해력이 요구되는 작업에서도 잘 작동함
     - GLUE, SQuAD와 같은 benchmark에서는 RoBERTa와 유사한 학습 자원 하에서 비슷한 성능을 기록하고, 추상적 대화, 질의응답, 요약 작업에서 최고 성능을 달성함
-    - 예를 들어, XSum benchmark에서는 이전 연구 대비 ROUNGE 점수 6점이 향상됨
+    - 예를 들어, XSum benchmark에서는 이전 연구 대비 ROUGE 점수 6점이 향상됨
 - 또한, BART는 fine-tuning에 대한 새로운 접근 방식을 제안함
     - BART 모델 위에 몇 개의 추가 Transformer layer를 쌓는 새로운 기계 번역 방식을 제안함
     - 이 layer들은 BART의 전파(Propagation)를 통해 외국어를 Noisy 영어로 번역하도록 학습되며, 이를 통해 BART를 사전 학습된 target 언어 모델로 활용함
@@ -174,7 +183,7 @@
 
 - Sequence 분류 시에는 encoder와 decoder에 동일한 입력을 주고, decoder의 마지막 hidden state를 multi-class 분류기에 입력함
     - 이 작업은 BERT의 [CLS token](#cls-token)을 사용하는 방식과 유사함
-    - 다만, BART는 decoder 입력의 끝에 특정 token을 추가하며, 이 token의 표현이 decoder가 처리한 입력 sequence에 attention 할 수 있도록 설계됨 (**Figure 3a**)
+    - 다만, BART는 decoder 입력의 끝에 특정 token을 추가하며, 이 token의 표현이 decoder가 처리한 입력 sequence에 attention 할 수 있도록 설계됨 (***Figure 3a***)
         > - Decoder 입력에 추가된 token의 최종 hidden state가 입력 sequence를 요약한 표현이 되도록 유도함
 
 ### 3.2 Token Classification Tasks
@@ -193,7 +202,7 @@
 
 - BART는 영어 번역을 위한 기계 번역 decoder의 성능을 향상시킴
     - 선행 연구 Edunov et al. (2019)에서는 사전 학습된 encoder를 통합하여 성능을 향상시켰지만, decoder의 사전 학습 LM 이점은 제한적이었음
-- Bitext *(source와 target 언어가 1:1로 매핑된 문자쌍)* 로 학습된 encoder parameter set을 새로 추가하여, BART(encoder와 decoder 모두)가 기계 번역을 위한 하나의 사전 학습된 decoder로 사용 가능함 (**Figure 3b**)
+- Bitext *(source와 target 언어가 1:1로 매핑된 문자쌍)* 로 학습된 encoder parameter set을 새로 추가하여, BART(encoder와 decoder 모두)가 기계 번역을 위한 하나의 사전 학습된 decoder로 사용 가능함 (***Figure 3b***)
     - 보다 정확히는, BART의 embedding layer를 무작위로 초기화된 새로운 encoder로 교체함
     - 추가된 encoder는 외국어 단어를 BART가 복원 가능한 형태의 입력 *(noisy 영어)* 으로 바꾸어 주도록 학습함
 - 추가된 source encoder는 두 단계로 학습하며, 역전파(Backpropagation)는 BART 출력에 대한 cross-entory loss임
@@ -272,23 +281,12 @@
 - 뉴스 요약 데이터셋이며, 매우 추상적으로 요약됨
 
 ##### ConvAI2
-- 대화 응답 생성 작업으로, 문맥과 한 타인의 응답을 조합함
+- 대화 응답 생성 작업으로, 문맥과 AI 인물 정보(Persona)를 조합함
 
 ##### CNN/DM
 - 뉴스 요약 데이터셋으로, 원문과 밀접하게 연관되어 요약됨
 
 ### 4.3 Results
-
-###### [Table 1] 사전 학습 방식 비교
-
-![table 1](img/bart-tbl-01.png)
-
-```
-- 모든 모델은 유사한 크기이며, 서적과 wikipedia 데이터를 조합하여 100만 step 학습됨
-- 아래 두 블록의 항목은 동일한 코드 기반으로 동일한 데이터로 학습되었으며, 동일한 절차로 fine-tuning 되었음
-- 두번째 블록의 항목은 이전 연구에서 제안된 사전 학습 방식에 영감을 받았지만, 평가 목표에 초점을 맞추어 단순화됨
-- 성능은 작업별로 상당한 차이를 보이지만, Text Infilling을 적용한 BART 모델이 가장 일관성있게 우수한 성능을 보여줌
-```
 
 **사전 학습 방식의 성능은 작업별로 상당히 상이함**
 - 사전 학습 방식의 유효성은 downstream 작업에 따라 크게 달라짐
@@ -300,7 +298,7 @@
 - 특히 생성 작업에서는 token 제거 방식이 masking 방식을 능가함
 
 **단방향(좌→우) 사전 학습은 생성 성능을 향상시킴**
-- Masked LM과 Permuted LM은 사전 학습 시 단방향(좌→우) 자기회귀 언어 모델 구조을 사용하지 않아, 생성 작업에서 성능이 낮았음
+- Masked LM과 Permuted LM은 사전 학습 시 단방향(좌→우) 자기회귀 LM 구조을 사용하지 않아, 생성 작업에서 성능이 낮았음
 
 **양방향 Encoder는 SQuAD 작업에서 중요함**
 - BERT에서 언급했듯이, 분류 결정에서 이후 문맥은 중요하기 때문에 단방향(좌→우) decoder는 SQuAD 성능이 낮았음 
@@ -322,6 +320,15 @@
 **BART는 가장 일관성있는 우수한 성능을 달성함**
 - Text Infilling 방식을 사용한 BART 모델은 ELI5을 제외한 모든 작업에서 잘 작동함
 
+###### [Table 1] 사전 학습 방식 비교
+![table 1](img/bart-tbl-01.png)
+```
+- 모든 모델은 유사한 크기이며, 서적과 wikipedia 데이터를 조합하여 100만 step 학습됨
+- 아래 두 블록의 항목은 동일한 코드 기반으로 동일한 데이터로 학습되었으며, 동일한 절차로 fine-tuning 되었음
+- 두번째 블록의 항목은 이전 연구에서 제안된 사전 학습 방식에 영감을 받았지만, 평가 목표에 초점을 맞추어 단순화됨
+- 성능은 작업별로 상당한 차이를 보이지만, Text Infilling을 적용한 BART 모델이 가장 일관성있게 우수한 성능을 보여줌
+```
+
 ---
 
 ## 5. Large-scale Pre-training Experiments
@@ -334,74 +341,88 @@
 - BART는 12-layer encoder와 12-layer decoder, hidden size 1,024개로 구성된 대규모 모델을 학습함
 - RoBERTa와 동일하게 batch size 8,000개, 총 50만 step으로 사전 학습을 수행함
 - 문서는 GPT-2 tokenizer를 사용해 문서 단위로 쌍을 이루어 encoding됨
-- 4장의 결과를 바탕으로 <u>**Text Infilling**</u>과 <u>**Sentence Permutation**</u> 기법의 조합을 사용함
+- 4장의 결과를 바탕으로 Text Infilling과 Sentence Permutation 기법의 조합을 사용함
     - 각 문서의 약 30% token을 masking하고, 모든 문장을 무작위로 섞음
     - Sentence Permutation 방식이 CNN/DM 요약 작업에서만 추가 이점을 보였지만, 이 방식으로 대규모 사전 학습 모델이 더 잘 학습될 수 있다고 가정함
 - 모델이 데이터에 더 잘 적합되도록 학습 후반 10% step은 dropout을 사용하지 않음
 - 사전 학습 데이터는 RoBERTa와 동일하게 뉴스, 서적, 스토리, 웹 등 총 160GB 규모를 사용함
 
 ### 5.2 Discriminative Tasks
-
-###### [Table 2] SQuAD 및 GLUE 작업에 대한 대규모 모델 성능 비교
-
-![table 2](img/bart-tbl-02.png)
-
-```
-BART는 판별 작업에서 단방향 decoder layer의 성능이 저하되지 않았으며, RoBERTa 및 XLNet과 비슷한 성능임
-```
-
 - 동일한 자원으로 사전 학습된 RoBERTa가 가장 직접적인 비교 기준이지만, 사전 학습 방식에는 차이가 있음
 - 전반적으로 BART는 유사한 수준의 성능을 보였으며, 대부분의 작업에서 모델 간 성능 차이는 미미함
     - 이는 생성 작업을 위한 BART가 분류(판별) 성능도 경쟁력 있음을 시사함
+
+###### [Table 2] SQuAD 및 GLUE 작업에 대한 대규모 모델 성능 비교
+![table 2](img/bart-tbl-02.png)
+```
+BART는 판별 작업에서 단방향 decoder layer의 성능이 저하되지 않았으며, RoBERTa 및 XLNet과 비슷한 성능임
+```
 
 ### 5.3 Generation Tasks
 
 - BART는 입력 text로부터 출력 text를 생성하는 표준 seq2seq 모델로 fine-tuning 되었음
 - Fine-tuning 시에는 label smoothing이 적용된 cross-entropy loss를 사용하였으며, smoothing parameter는 0.1로 설정함
-- Text 생성 시에는 beam size를 5로 설정하고, beam search 과정에서 중복된 trigram을 제거함
+- Text 생성 시에는 beam size를 5로 설정하고, beam search 과정에서 중복된 trigram은 제거함
     > - 매 token 생성 시 마다 확률이 높은 5개의 문장을 후보로 두고, 마지막에 가장 확률이 높은 문장을 고름
     > - 문장의 질을 높이기 위해 3개 연속 반복되는 token이 포함된 문장은 제거함
-
-
 - 평가 데이터셋은 최소/최대 길이 및 길이 보정 계수(Length Penalty)를 적용함
-    > - 긴 문장은 token을 더 많이 생성하므로 전체 확률이 작아져 모델이 짧은 문장을 더 선호할 수 있음
+    > - Token을 생성할수록 전체 확률이 작아져 모델이 짧은 문장을 더 선호할 수 있음
     > - 이런 상황을 보정해주기 위해 text 길이 관련 parameter를 설정함
 
 ##### Summarization
 
-###### [Table 3] 두 가지 표준 요약 데이터셋 결과
-
-![table 3](img/bart-tbl-03.png)
-
 - 최신 요약 모델들과 비교하기 위해, 서로 다른 특성을 가진 두 개의 요약 데이터셋 CNN/DailyMail과 XSum에 대한 실험 결과를 제시함
-- CNN/DailyMail 데이터셋의 요약은 원문과 닮는 경향이 있음
-- 추출 기반 모델이 이 데이터셋에서 잘 작동했으며, 기준점인 Lead-3 (첫 문장부터 세번째 원문)도 상당히 경쟁력이 있었음
-- 그럼에도 BART는 기존 모델들을 능가함
+- CNN/DailyMail의 요약은 원문과 유사한 경향이 있음
+    - 추출 기반 모델이 이 데이터셋에서 잘 작동했으며, 기준점인 Lead-3 *(첫 세 문장을 추출하는 방법)* 도 상당히 경쟁력이 있었음
+    - 그럼에도 BART는 기존 모델들을 능가함
+- 반면에 XSum의 요약은 매우 추상적이며, 추출 기반 모델은 성능이 급격히 떨어짐
+    - BART는 기존 BERT 기반 모델보다 모든 ROUGE 지표에서 약 6점 더 높은 성능을 보였으며, 해당 작업에서 매우 우수한 결과를 나타냄
+    - 생성된 샘플의 질도 매우 뛰어남
 
-
+###### [Table 3] 두 가지 표준 요약 데이터셋 결과
+![table 3](img/bart-tbl-03.png)
+```
+BART는 요약 작업에서 기존 최고 모델을 능가했으며, 
+특히 더 추상적인 데이터셋에서는 약 6 points 높은 성능을 기록함
+```
 
 ##### Dialogue
+- ConvAI2 작업에서 질의응답 생성 성능을 평가하였으며, 이전 문맥과 AI 인물 정보(Persona)를 반영하여 응답을 생성함
+- BART는 두 가지 자동 평가 지표에서 기존 최고 모델을 능가함
 
-###### [Table 4]
-
+###### [Table 4] ConvAI2 성능 비교
 ![table 4](img/bart-tbl-04.png)
+```
+- BART는 질의응답 생성 작업에서 기존 모델을 능가함
+- 복잡성 계산은 ConvAI2의 공식 Tokenizer를 기준으로 재정규화됨
+```
 
 ##### Abstractive QA
 
-###### [Table 5]
+- 최근 제안된 ELI5 데이터셋을 활요하여 모델의 긴 자유형 답변 생성 능력을 평가함
+- BART는 기존 최고 모델보다 ROUGE-L 기준 1.2점 더 높았지만, 질문에 대한 답변의 구성이 부족하여, 이 데이터셋은 여전히 까다로운 과제로 남아 있음
 
+###### [Table 5] ELI5 성능 비교
 ![table 5](img/bart-tbl-05.png)
+```
+BART는 추상적 질의응답 데이터셋인 ELI5에서 최고 성능을 기록함
+```
 
-#### 5.4 Translation
+### 5.4 Translation
 
-- 역번역 데이터로 증강된 WMT16 Romanian-English의 성능을 평가함
-    - 3.4 섹션에서 소개한 방식을 따라, Romanian을 BART가 de-nosing 영어로 변환하도록 하는 표현으로 6-layer Transfomer source encoder를 사용함
+- 역번역 데이터로 증강된 **WMT16 Romanian-English** 데이터셋에서 성능을 평가함
+    - 3.4 섹션에서 소개한 방식을 따라, 루마니아어를 BART가 복원 가능한(noised-to-English) 형태로 변환할 수 있도록, 6-layer Transformer 기반의 source encoder를 학습함
+- Transformer 구조를 기준으로 성능을 비교함
+    - `Fixed BART`와 `Tuned BART` 모델의 두 단계 성능을 보여줌
+    - `beam width = 5`, `length penalty = 1` 사용함
+    - 예비 실험 결과, 역번역 데이터 없이 학습하는 경우 성능이 낮고 과적합(Overfitting)되는 경향이 있음
+    - 향후 연구에서는 추가적인 정규화 기법을 탐구해야 함
 
-- Transformer 구조를 기준으로 결과를 비교함
-
-###### [Table 6]
-
+###### [Table 6] WMT16 RO-EN 성능 비교 (BLUE)
 ![table 6](img/bart-tbl-06.png)
+```
+BART는 영어만으로 사전 학습되었음에도 역번역 기반 모델보다 우수한 성능을 보임
+```
 
 ### 6. Qualitative Analysis
 
@@ -421,7 +442,7 @@ BART는 판별 작업에서 단방향 decoder layer의 성능이 저하되지 �
 
 ---
 
-# Dictionaly
+## Dictionaly
 
 ### Denosing Autoencoder
 
@@ -449,13 +470,6 @@ BART는 판별 작업에서 단방향 decoder layer의 성능이 저하되지 �
 - 문장 추론, 유사도, 감정 분류 등 총 9개의 Task로 구성되어 있음
 - 모델이 얼마나 언어를 잘 이해하는지를 평가하는 데 쓰임
 - 많은 모델들이 이 점수를 기준으로 성능을 비교함
-
-### SQuAD
-
-- SQuAD는 QA Task를 위한 데이터셋임
-- 주어진 지문에서 사용자가 묻는 질문에 답을 찾아야 하는 형식임
-- 정답은 보통 지문 안에 존재하는 문장 일부임
-- Stanford에서 만든 데이터셋으로 Stanford Question Answering Dataset의 약자임
 
 ### Back-translation
 
@@ -497,7 +511,7 @@ BART는 판별 작업에서 단방향 decoder layer의 성능이 저하되지 �
 
 ---
 
-# Reference
+## Reference
 
 - [논문 원본](https://arxiv.org/pdf/1910.13461)
 - [ACL 발표 논문 (2020)](https://aclanthology.org/2020.acl-main.703/)
