@@ -3,58 +3,66 @@
 - 2019년 10월 Facebook에서 발표한 논문임
 - Denosing Sequence-to-Sequence Pre-training for Natural Language Generation, Translation, and Comprehension
 
-### Summary
+### Model Architecture
 
-#### Model Architecture
+- BART는 **Transformer 기반의 seq2seq 구조**임
+    - Encoder는 BERT처럼 양방향(Bidirectional) 방식으로 작동함
+    - Decoder는 GPT처럼 자기회귀(Auto-regressive) 방식으로 작동함
+- 모델은 **12 encoder/12 decoder layers**로 구성함
+- Activation 함수는 [GeLU](#gelu)를 사용함
+- Parameter 초기화는 `N(0, 0.02)` 분포를 사용함
+- Dropout은 fine-tuning 시 마지막 10% step 동안 비활성화함
+- Decoder는 단어 예측 전에 FFN(feed-forword network)를 사용하지 않음
 
-- BART는 DAE([Denosing Autoencoder](#denosing-autoencoder))로, 표준 Transfomer 기반 MNT(Neural Machine Translation) 구조임
-- 다만, 단어 예측 전에 FFN(feed-forword network)은 사용하지 않음
-- BART는 양방향(Bidirectional)과 자기회귀(Auto-regressive) Transformer를 결합한 사전 학습 모델임 ➡️ BERT와 GPT를 포함한 다양한 사전 학습 방식(Pre-training Objective)을 일반화함
-- BART의 기본 모델은 6-layer encoder와 6-layer decoder로 구성되며, 대형 모델은 각 12-layer를 사용함
-- Activation 함수는 [GeLU](#gelu)를 사용하고, parameter는 N(0, 0.02) 분포로 초기화함
+### Pre-training Objective
 
-#### Noising Method
+- BART는 **DAE** ([Denosing Autoencoder](#denosing-autoencoder)) 방식으로 사전 학습됨
+    - Noising 함수로 손상된 문서를 원본으로 복원하는 방식으로 학습함 (사전 학습 시에만 nosing 적용함)
+    - [Sentence Permutation](#sentence-permutation)과 [Text Infilling](#text-infilling) 기법을 조합하여 사용할 때 가장 우수한 성능을 보였음
+    - 즉, 각 문서의 약 30% token을 연속된 span 단위로 masking하고, 모든 문장을 무작위로 섞어 학습함
+- Decoder의 출력과 원본 문서 간의 cross-entropy loss, 즉 negative log likelihood를 최소화하는 방향으로 학습됨
+- [RoBERTa](#roberta)와 동일하게 뉴스, 서적, 스토리, 웹 등 총 160GB 규모의 데이터를 사용하며, batch size 8,000, **총 50만 step**으로 학습함
+- 다양한 noise 유형을 처리하는 능력을 통해 다양한 downstream 작업에 적용 가능함
+ 
+### Fine-tuning Strategy
 
-- [Sentence Permutation](#sentence-permutation)과 [Text Infilling](#text-infilling) 기법으로 noisy text를 사용할 때 가장 우수한 성능을 보였음
-    - 각 문서의 약 30% token을 masking하고, 모든 문장을 무작위로 섞음
-    - 이 기법으로 모델이 전체 문장 길이에 대해 더 깊이 추론하고 입력보다 더 긴 변환을 하도록 강제함
-    - 즉, BERT의 단어 수준 masking과 NSP(Next Sentence Prediction) 방식을 포괄함
+- BART는 다양한 downstream 작업에 맞춰 end-to-end 방식으로 fine-tuning 할 수 있음
 
-#### Pre-training Objective
+**Discriminative**
+- Encoder와 decoder에 동일한 입력을 주며, decoder 마지막에 특별 token을 추가함
+- 이 token의 hidden state를 문장 전체의 표현으로 사용하여 분류기에 전달함
 
-- 사전 학습은 원본 문서에 대한 negative log likelihood를 최소화하는 방식으로 진행됨
-- BART는 손상된 문서를 encoder와 decoder에 입력하며, decoder의 출력과 원본 문서 간의 cross-entropy loss를 최소화하는 방식으로 학습됨
-- BART의 기본 모델은 다양한 서적과 wikipedia 데이터로 100만 step 학습함
-- BART의 대형 모델은 RoBERTa와 동일하게 뉴스, 서적, 스토리, 웹 등 총 160GB 규모의 데이터를 사용함
-    - RoBERTa와 동일하게 batch size 8,000개, 총 50만 step으로 사전 학습을 수행함
-    - 모델이 데이터에 더 잘 적합되도록 학습 후반 10% step은 dropout을 사용하지 않음
+**Generation**
+- 입력을 encoder에 넣고, decoder가 자기회귀적으로 text를 생성하도록 fine-tuning함
+- 학습 시에는 [Label Smoothing]()이 적용된 cross-entropy loss를 사용하였으며, `smoothing parameter = 0.1`로 설정함
+- 추론 시에는 [Beam Search]()를 사용하였으며, `beam width = 5`, `length penalty = 1`로 설정함
 
-#### Fine-tuning
+**Translation**
+- BART 앞에 source 단어 임베딩을 BART 입력 공간으로 사상하는 작은 encoder를 추가함
+    - 이 encoder는 무작위로 초기화되며, 별도의 단어 집합(source vocabulary)으로 사용할 수 있음
+- 먼저 대부분의 BART parameter를 고정하고, 다음 항목만 학습시킴
+    - 추가된 encoder
+    - BART positional embedding
+    - BART encoder 첫 번째 layer의 self-attention projection matrix
+- 다음으로 모델의 모든 parameter를 소량의 step으로 fine-tuning함
 
-- 분류 작업에서 BART는 encoder와 decoder에 동일한 입력을 주고, 마지막 출력의 표현을 multi-class 분류기에 입력함
-    - Decoder 입력 끝에 특정 token을 추가하여, 해당 token의 최종 hidden state가 입력 sequence를 요약한 표현이 되도록 유도함
-- 기계 번역 작업에서는 BART 앞에 word embedding을 위한 작은 encoder를 추가로 학습시킴
-    - 추가된 encoder는 별도의 단어 집합(Vocabulary)으로 사용할 수 있음
-    - 먼저 BART의 대부분 parameter를 고정하고, 다음 항목만 학습시킴
-        - 추가된 encoder (무작위로 초기화됨)
-        - BART positional embedding
-        - BART encoder 첫 번째 layer의 self-attention projection matrix
-    - 다음으로 작은 수의 iteration으로 모델의 모든 paramter를 학습시킴
-**Generation Tasks**
-- 입력 text로부터 출력 text를 생성하는 표준 seq2seq 모델로 fine-tuning 되었음
-- [label smoothing]이 적용된 cross-entropy loss를 사용하였으며, smoothing parameter는 0.1로 설정함
-- [beam search]
+### Performance Evaluation
 
-#### Performance
+- BART는 다양한 benchmark에서 SOTA(state-of-the-art) 또는 경쟁력 있는 성능을 보임
+- 생성 작업(summarization, dialogue, QA)에서 우수한 성과를 보이며, 최대 +6 ROUGE 달성함
+- 이해 기반 작업(SQuAD, GLUE)에서도 RoBERTa와 유사한 성능을 달성함
+- 기계 번역 작업에서는 별도 역번역([Back-translation](#back-translation)) 없이도 +1.1 [BLEU](#bleu) (Bilingual Evaluation Understudy) 달성함
+- 다양한 noising 방식에 유연하게 대응할 수 있어, 범용성이 높은 모델임
+- 다만, 입력과 출력 간 의미적 연결이 약한 작업에서는 효율이 떨어질 수 있음
 
-- BART의 주요 장점은 noising의 유연성으로, 다양한 유형의 손상된 문서를 학습에 활용할 수 있음
-- BART는 text 생성 작업을 위한 fine-tuning에서 특히 효과적이었지만, 이해력이 요구되는 작업에서도 잘 작동함
-- 즉, BART는 다양한 downstream 작업에서 일관된 강력한 성능을 보임
-- [GLUE](#glue) 및 [SQuAD](#squad) benchmark에서는 [RoBERTa](#roberta)와 유사한 학습 자원 하에서 비슷한 성능을 기록함
-- 추상적 대화, 질의응답, 요약 작업에서는 최고 성능(최대 6 ROUGE 포인트 향상)을 달성함
-- 또한, 기계 번역 작업에서는 target 언어에 대한 사전 학습만으로도 역번역([Back-translation](#back-translation)) 방식보다 1.1 [BLEU](#bleu) (Bilingual Evaluation Understudy) 향상함
-- BART는 출력이 입력과의 의미적 연결이 약할 때 비효율적일 수 있음
-
+| Task | Benchmark | Notes |
+|---|---|---|
+| Discriminative | [SQuAD](#squad), [MNLI](#mnli) | RoBERTa 및 XLNet과 비슷한 성능임 |
+| Generation - Summarization | [CNN/DailyMail](#cnndm) | 기존 모델보다 우수함 |
+| | [XSum](#xsum) | 최대 **+6 ROUGE** 향상됨, 추상적으로 요약 잘함 |
+| Generation - Dialogue | [ConvAI2](#convai2) | 기존 모델보다 우수함 |
+| Generation - Abstractive QA | [ELI5](#eli5) | ROUGE-L 기준 1.2점 향상됨, 답변 구성이 부족함 |
+| 기계 번역 | WMT14 Ro-En | 역번역 없이도 **+1.1 BLEU** 향상됨 |
 
 ---
 
