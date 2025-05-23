@@ -61,8 +61,6 @@ prompt = ChatPromptTemplate.from_messages([
 - `ConversationBufferMemory` : 최근 대화 내용을 버퍼 형태로 유지하여 간단한 맥락을 지속적으로 제공하는 클래스
 - `SummaryMemory` : 이전 대화 내용을 요약해 저장함으로써 긴 대화 히스토리도 압축된 형태로 관리할 수 있는 클래스
 
-
-
 ```python
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
@@ -93,7 +91,6 @@ def get_session_history(session_id: str) -> BaseChatMessageHistory:
 **6. Chain** : 여러 구성 요소(LLM, 프롬프트, 툴 등)를 순차적으로 연결하여 복잡한 작업 흐름을 구성할 수 있음
 
 ```python
-
 from langchain_core.output_parsers import StrOutputParser
 parser = StrOutputParser()
 
@@ -113,4 +110,5 @@ response = chain_with_history.invoke(
     {"subject": "수학", "question": "1+2는 얼마인가요?"},
     config={"configurable": {"session_id": "user1"}}
 )
+print("답변: ", response)
 ```

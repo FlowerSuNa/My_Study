@@ -79,7 +79,7 @@
     - 최근 연구에서는 masked token의 분포, 예측 순서, 대체 가능한 문맥을 개선하는 성과를 달성함
     - 하지만 이 기법들은 특정 end task(span 예측, 생성 등)에만 집중하여 적용 가능성이 제한적임
 - 본 논문에서는 양방향과 자기회귀 Transformer를 결합한 사전 학습 모델인 BART를 제안함
-    - BART는 다양한 end Task에 적용 가능한 seq2seq 기반 Denosing Autoencoder임
+    - BART는 다양한 end task에 적용 가능한 seq2seq 기반 DAE임
     - 사전 학습은 text를 임의의 nosing 함수로 변형한 후, seq2seq 모델이 원본 text로 복구하도록 학습하는 방식임
     - BART는 표준 Transformer 기반 NMT 구조를 사용함
     - 단순한 구조임에도 양방향 encoder인 BERT와 단방향(좌→우) decoder인 GPT를 포함하여 다양한 최신 사전 학습 방식들을 일반화함 (***Figure 1***)
@@ -388,7 +388,7 @@ BART는 요약 작업에서 기존 최고 모델을 능가했으며,
 
 ##### Dialogue
 - ConvAI2 작업에서 질의응답 생성 성능을 평가하였으며, 이전 문맥과 AI 인물 정보(Persona)를 반영하여 응답을 생성함
-- BART는 두 가지 자동 평가 지표에서 기존 최고 모델을 능가함
+- BART는 두 가지 정량 평가 지표에서 기존 최고 모델을 능가함
 
 ###### [Table 4] ConvAI2 성능 비교
 ![table 4](img/bart-tbl-04.png)
@@ -410,31 +410,73 @@ BART는 추상적 질의응답 데이터셋인 ELI5에서 최고 성능을 기�
 
 ### 5.4 Translation
 
-- 역번역 데이터로 증강된 **WMT16 Romanian-English** 데이터셋에서 성능을 평가함
-    - 3.4 섹션에서 소개한 방식을 따라, 루마니아어를 BART가 복원 가능한(noised-to-English) 형태로 변환할 수 있도록, 6-layer Transformer 기반의 source encoder를 학습함
-- Transformer 구조를 기준으로 성능을 비교함
-    - `Fixed BART`와 `Tuned BART` 모델의 두 단계 성능을 보여줌
-    - `beam width = 5`, `length penalty = 1` 사용함
-    - 예비 실험 결과, 역번역 데이터 없이 학습하는 경우 성능이 낮고 과적합(Overfitting)되는 경향이 있음
+- 역번역으로 증강된 **WMT16 Romanian-English** 데이터셋에서 성능을 평가함
+    - 3.4 섹션에서 소개한 방식을 따라, 루마니아어를 BART가 de-noised 영어로 복원할 수 있도록, 6-layer Transformer 기반의 source encoder를 학습함
+- 표준 Transformer 모델을 기준선으로 BART의 두 단계인 `Fixed BART`와 `Tuned BART` 성능을 비교함
+    - 모든 모델은 역번역으로 증강된 데이터셋으로 실험함
+    - `beam width = 5`, `length penalty = 1` 설정을 사용함
+    - 예비 실험 결과, 역번역 데이터 없이 학습하는 경우 성능이 낮고 과적합(Overfitting) 경향이 있음
     - 향후 연구에서는 추가적인 정규화 기법을 탐구해야 함
 
 ###### [Table 6] WMT16 RO-EN 성능 비교 (BLUE)
 ![table 6](img/bart-tbl-06.png)
 ```
-BART는 영어만으로 사전 학습되었음에도 역번역 기반 모델보다 우수한 성능을 보임
+BART는 영어만으로 사전 학습하여 역번역 기준선을 개선함
 ```
 
-### 6. Qualitative Analysis
+---
 
-###### [Table 7]
+## 6. Qualitative Analysis
 
+- BART는 요약 작업에서 기존 최고 성능 대비 최대 6점의 향상을 달성함
+- 정량 평가 지표 외에도, BART의 성능을 이해하기 위해 생성 품질을 분석함
+- ***[Table 7]*** 은 BART가 생성한 요약문 예시임
+    - 예시는 모델의 학습 데이터에 설명된 내용이 존재할 가능성을 배제하도록 사전 학습 말뭉치를 생성한 이후에 게시된 WikiNews 기사에서 발췌함
+    - 요약하기 전에 기사의 첫 문장을 제거하여 문서의 요약을 쉽게 추출할 수 없도록 함
+
+###### [Table 7] XSum으로 tuning된 BART에 WikiNews 기사를 적용한 예시 요약
 ![table 7](img/bart-tbl-07.png)
+```
+- 명확성을 위해 출처와 관련된 부분만 발췌함
+- 요약은 기사 전체의 정보와 배경 지식을 결합한 것임
+```
 
-### 7. Related Work
+- 예상대로 BART의 출력은 유창하고 문법에 맞는 영어임
+    - 출력은 매우 추상적이어서 입력에서 복사된 문구가 거의 없음
+    - 출력은 일반적으로 사실적으로 정확하며, 입력 문서 전반의 뒷받침 증거와 배경 지식(예: 이름 정확하게 완성하거나 PG&E가 캘리포니아에서 운영됨을 추론)을 통합함
+- 첫 번째 예시에서 물고기가 지구 온난화로부터 산호초를 보호하고 있다는 추론은 text에서의 쉽지 않은 추론이 필요함
+    - 다만, 해당 연구가 Science에 게재되었다는 주장은 출처에서 뒷받침되지 않음 *(hallucination)*
+- 이러한 예시는 사전 학습된 BART가 자연어 이해와 생성의 강력한 조합을 학습되었음을 보여줌
 
-- 여러 연구에서는 사전 학습된 표현을 사용하여 기계 번역을 개선하는 방법을 탐구했음
+---
 
-### 8. Conclusions
+## 7. Related Work
+
+- 초기 사전 학습 방식은 LM 기반임
+    - `GPT`는 좌측 문맥만 학습하며, 이는 일부 작업에서 문제가 될 수 있음
+    - `ELMo`는 좌측 전용 표현과 우측 전용 표현을 결합하지만, 이 특징들 간의 상효작용은 사전 학습하지 않음
+    -  Radford et al.(2019) 연구는 대규모 LM이 비지도 학습된 다중 작업 모델로 작동할 수 있음을 보여줌
+- `BERT`는 좌우 문맥 단어 간의 상호작용을 사전 학습할 수 있도록 Masked LM 방식을 소개함
+    - 최근 연구에서는 더 긴 학습 시간, layer 간 parameter 공유, 단어 대신 span masking을 통해 강력한 성능을 보여줌
+    - 다만, `BERT`는 예측이 자기 회귀적으로 이루어지지 않으므로 생성 작업에서는 비효율적임
+- `UniLM`은 다양한 mask 방식의 조합으로 `BERT`를 fine-tuning하여, 그중 일부는 왼쪽 방향의 문맥만 허용함
+    - `BART`와 유사하게, `UniLM`은 생성 및 판별 작업 모두에 사용할 수 있음
+    - 차이점은 `UniLM` 예측은 조건부 독립인 반면, `BART` 예측은 자기회귀적임
+    - `BART`는 decoder가 항상 손상되지 않은 문맥을 학습하므로, 사전 학습과 생성 작업 간의 불일치를 줄임
+- `MASS`는 `BART`와 가장 유사한 모델임
+    - 연속된 masked span로 구성된 입력 sequence를 누락된 token으로 구성된 sequence로 변환시킴
+    - `MASS`는 분리된 token set이 encoder와 decoder에 입력되어 판별 작업에서는 효과적이지 않음
+- `XL-Net`은 무작위 순서의 masked token을 자기회귀적으로 예측함으로써 `BERT`를 확장함
+    - 이 방식은 좌우 문맥을 모두 적용하여 예측됨
+    - 반면, `BART`는 decoder가 사전 학습 과정에서 좌에서 우로 동작하며, 생성 과정에서는 설정에 맞춰 작동함
+- 여러 연구에서는 사전 학습된 표현을 사용하여 기계 번역을 개선하는 방법을 탐구함
+    - 가장 큰 개선은 source와 target 언어에 대한 사전 학습을 수행할 때 보여지지만, 이는 모든 언어에 대한 사전 학습이 필요함
+    - 다른 연구에서는 사전 학습된 표현을 사용하여 encoder가 개선될 수 있음을 보여주었지만, decoder의 이점은 제한적이었음
+    - 본 연구에서는 `BART`가 기계 번역 decoder를 개선할 수 있는 방법을 보여줌
+
+---
+
+## 8. Conclusions
 
 - 본 논문은 손상된 문서를 원본으로 복원하도록 사전 학습된 BART를 소개함
 - BART는 판별 작업에서 RoBERTa와 유사한 성능을 달성하였으며, text 생성 작업에서 SOTA(state-of-the-art)를 달성함
