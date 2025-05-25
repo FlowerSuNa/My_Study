@@ -1,0 +1,30 @@
+[project]
+name = "prj01"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "beautifulsoup4>=4.13.4",
+    "faiss-cpu>=1.11.0",
+    "gradio>=5.29.1",
+    "gradio-pdf>=0.0.22",
+    "ipykernel>=6.29.5",
+    "jq>=1.8.0",
+    "kiwipiepy>=0.21.0",
+    "langchain>=0.3.25",
+    "langchain-chroma>=0.2.4",
+    "langchain-community>=0.3.24",
+    "langchain-experimental>=0.3.4",
+    "langchain-google-genai>=2.1.4",
+    "langchain-huggingface>=0.2.0",
+    "langchain-ollama>=0.3.3",
+    "langchain-openai>=0.3.16",
+    "langchain-pinecone>=0.2.6",
+    "numpy==1.26.4",
+    "pillow>=11.2.1",
+    "pinecone-notebooks>=0.1.1",
+    "pymupdf>=1.26.0",
+    "pypdf>=5.5.0",
+    "python-dotenv>=1.1.0",
+]
