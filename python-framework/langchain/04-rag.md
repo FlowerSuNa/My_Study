@@ -43,6 +43,33 @@
 - Amazon Kendra : 자체 RAG를 관리하는 조직을 위해 기계 학습 기반의 매우 정확한 엔터프라이즈 검색 서비스임
     - Kendra Retrive API를 제공함
 
+## Document Indexing
+
+**1. Load Document**
+- `langchain_community.document_loaders` 모듈의 다양한 로더 클래스를 활용하여 문서 데이터를 로드할 수 있음
+    - `PyPDFLoader`: PDF 파일 로더 (`pypdf` 패키지 설치 필요)
+    - `WebBaseLoader`: 웹 문서 로더 (`beautifulsoup4` 패키지 설치 필요)
+    - `JSONLoader`: JSON 파일 로더 (`jq` 패키지 설치 필요)
+    - `CSVLoader`: CSV 파일 로더
+
+**2. Split Texts** : RAG 파인프라인에서 적절한 문서 청크 크기 조정은 검색 성능과 LLM 응답 품질에 큰 영향을 줌
+- `langchain_text_splitters` 모듈의 다양한 `TextSplitter` 클래스를 활용하여 텍스를 구조화된 청크 단위로 분할할 수 있음
+    - `CharacterTextSplitter`: 지정한 문자 수를 기준으로 텍스트를 일정한 길이로 분할하며, 정규표현식을 구분자로 설정하면 문단이나 문장 단위로 자연스럽게 나누는 것도 가능함
+    - `RecursiveCharacterTextSplitter`: 여러 구분자를 우선순위 순으로 순차 적용해 분할하는 방식으로, 글자 수나 토큰 수 기준 모두 가능하며 토큰 단위 분할 시에는 토크나이저가 필요함
+- `langchain_experimental.text_splitter` 모듈의 `SemanticChunker`를 활용하여 텍스트를 분할할 수 있음
+    - 정량적인 기준이 아닌 의미 기반 분할을 수행하기 때문에 도메인 특화 RAG 성능을 높이는 데 효과적임
+    - 다만 임베딩 계산이 존재하여 계산 비용이 존재하며, 처리량이 많을 경우 리소스 관리 필요함
+    - **Gradient** 방식: 임베딩 벡터 간의 **기울기 변화**를 기준으로 의미가 크게 달라지는 지점을 찾아 분할함
+    - **Percentile** 방식: 임베딩 거리 분포의 **백분위수**를 기준으로 급격한 의미 변화가 감지되는 구간을 분할함
+    - **Standard Deviation** 방식: 임베딩 거리 분포의 **표준편차**를 활용하여 유의미한 변화 지점을 찾아 분할함
+    - **Interquartile** 방식: **사분위수 범위**를 기준으로 이상치를 지점을 찾아 분할함
+
+## Vectorstore
+
+
+
+## Retriever
+
 ## Example 1
 
 **1. Document Indexing**
@@ -133,7 +160,7 @@ print(f"Q: {response['query']}")
 print(f"A: {response['result']}")
 ```
 
-Q: AGI관련 기사 뽑아줘.
+Q: AGI관련 기사 뽑아줘. <br>
 A: 아래는 AGI(Artificial General Intelligence, 범용 인공지능) 관련 기사 요약입니다.
 <br>
 **"그래서 AGI 왔다고?"…오픈AI 올트먼, X에 오묘한 메시지**  
