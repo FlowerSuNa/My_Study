@@ -1,13 +1,14 @@
-# LangChain의 실행 구조 : Runnable과 LCEL
-
-## Runnable
+# Runnable
 
 - LangChain의 모든 컴포넌트는 `Runnable` 인터페이스를 구현하여 일관된 방식으로 실행됨  
 - 실행 메서드로는 `.invoke()` (단일 입력), `.batch()` (여러 입력), `.stream()` (스트리밍 처리) 등을 지원하며, 동기/비동기 처리 방식에 따라 다양하게 활용 가능  
 - 모든 `Runnable` 컴포넌트는 `|` 연산자를 사용해 연결할 수 있으며, 이를 통해 재사용성과 조합성이 높은 체인을 구성할 수 있음 (LCEL 기반)
 
-💡 **Tip**: 하나의 Runnable, 프롬프트, 함수는 되도록 하나의 명확한 기능만 수행하도록 구성하는 것이 좋음
-- 복잡한 로직을 여러 단계로 나누어 구성하면 가독성과 유지보수성이 크게 향상됨
+```
+💡 Tip
+   하나의 Runnable, 프롬프트, 함수는 되도록 하나의 명확한 기능만 수행하도록 구성하는 것이 좋음
+   복잡한 로직을 여러 단계로 나누어 구성하면 가독성과 유지보수성이 크게 향상됨
+```
 
 ## LCEL (LangChain Expression Language)
 
@@ -23,108 +24,140 @@
 - LCEL로 연결한 체인은 내부적으로 `RunnableSequence`로 컴파일됨
 - 일반적으로는 LCEL 문법을 활용하여 선언적으로 구현하는 방식을 선호함
 
-```python
-from langchain_core.runnables import RunnableSequence
-from langchain_core.prompts import PromptTemplate
-from langchain_core.output_parsers import StrOutputParser
-from langchain_openai import ChatOpenAI
-
-# 컴포넌트 정의
-prompt = PromptTemplate.from_template("'{text}'를 영어로 번역해주세요. 번역된 문장만을 출력해주세요.")
-translator = ChatOpenAI(model="gpt-4.1-mini", temperature=0.3)
-output_parser = StrOutputParser()
-
-# RunnableSequence 생성 - 클래스 생성 방식
-translation_chain = RunnableSequence(
-    first=prompt,
-    middle=[translator],
-    last=output_parser
-)
-
-# RunnableSequence 생성 - LCEL 방식
-# translation_chain = prompt | translator | output_parser
-
-result = translation_chain.invoke({"text": "안녕하세요"})
-print(result) 
-```
-
 ## RunnableParallel
 
 - 여러 `Runnable` 객체를 딕셔너리 형태로 구성하여 병렬처리 가능함
 - 동일한 입력값이 각 `Runnable`에 전달되며, 결과는 키-값 형태로 반환됨
 - 주로 데이터 전처리, 변환, 포맷 조정 등에 활용되며, 다음 파이프라인 단계에서 요구하는 출력 형식으로 조정 가능함
 
-```python
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnableParallel
-from langchain_core.output_parsers import StrOutputParser
-from langchain_openai import ChatOpenAI
-from operator import itemgetter
-
-# 질문 템플릿 정의
-question_template = """
-다음 카테고리 중 하나로 입력을 분류하세요:
-- 화학(Chemistry)
-- 물리(Physics)
-- 생물(Biology)
-
-# 예시:
-Q: 사람의 염색체는 모두 몇개가 있나요?
-A: 생물(Biology)
-
-Q: {question}
-A: """
-
-# 언어 분류 템플릿 정의
-language_template = """
-입력된 텍스트의 언어를 다음 카테고리 중 하나로 분류하세요:
-- 영어
-- 한국어
-- 기타
-
-# 예시:
-입력: How many protons are in a carbon atom?
-답변: English
-
-입력: {question}
-답변: """
-
-# 답변 템플릿 정의
-answer_template = """
-당신은 {topic} 분야의 전문가입니다. {topic}에 관한 질문에 {language}로 답변해주세요.
-질문: {question}
-답변: """
-
-# 프롬프트 및 체인 구성
-answer_prompt = ChatPromptTemplate.from_template(answer_template)
-output_parser = StrOutputParser()
-
-# LLM model
-llm = ChatOpenAI(
-    model="gpt-4.1-mini", 
-    temperature=0.3
-)
-
-# 병렬 처리 체인 구성
-answer_chain = RunnableParallel({
-    "topic": question_chain,            # 주제 분류 체인
-    "language": language_chain,         # 언어 감지 체인
-    "question": itemgetter("question")  # 원본 질문 추출
-}) | answer_prompt | llm | output_parser
-
-# 체인 실행 예시
-result = answer_chain.invoke({
-    "question": "탄소의 원자 번호는 무엇인가요?"
-})
-print(f"답변: {result}")
-```
-
 ## RunnableLambda
 
-- 사용자 정의 파이썬 함수를 Runnable로 래핑하여 체인에 포함
+- 사용자 정의 파이썬 함수를 `Runnable` 객체로 감싸는 래퍼 컴포넌트임
+- 체인 내에 사용자 정의 로직을 손쉽게 통합할 수 있어 데이터 전처리·후처리 및 조건부 분기 처리 등에 유용함
+- 다른 `Runnable` 객체들과 결합하여 유연하고 복잡한 처리 파이프라인 구성이 가능함
 
 ## RunnablePassthrough
 
-- 입력값을 그대로 다음 단계로 전달함
-- `RunnablePassthrough`과 함께 사용되어 입력 데이터를 새로운 키로 매핑할 수 있음
-- 투명한 데이터 프름으로 파이프라인 디버깅과 구성이 용이함
+- 입력값을 변형 없이 그대로 다음 단계로 전달함
+- `RunnablePassthrough`은 입력 데이터를 새로운 키로 매핑할 수 있어 복수 입력이 필요한 체인 구성 시 유용하게 활용 가능함
+- 중간에 가공이 없는 투명한 데이터 흐름을 제공하므로 파이프라인 디버깅이 용이함
+
+## Example
+
+**1. Prompt**
+
+```python
+from langchain_core.prompts import ChatPromptTemplate
+
+summarize_templete = """
+{text}
+
+위에 입력된 텍스트를 다음 항목으로 요약해주세요: 
+- 여행 일정 :
+- 교통편 일정 :
+- 여행 장소 :
+- 여행 스타일 :
+- 예산 :
+- 추천 숙소 :"""
+
+summarize_prompt = ChatPromptTemplate.from_messages([
+    ("system", "당신은 여행 일정 작성을 도와주는 AI 어시스턴트입니다."),
+    ("human", summarize_templete)
+])
+
+planner_prompt = ChatPromptTemplate.from_template("""
+다음 텍스트의 여행 일정을 기반으로 세부 여행 일정을 짜주세요.
+텍스트: {summary}
+규칙:
+1. 날짜 및 시간과 장소, 세부 계획 항목으로 표 형태로 작성하세요.
+2. 여행 스타일과 추천 숙소, 예산에 맞추어 동선을 고려하여 장소를 추천하세요.
+답변:""")
+```
+
+**2. Chain**
+
+```python
+from langchain_openai import ChatOpenAI
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnableParallel, RunnableLambda, RunnablePassthrough
+from IPython.display import display, Markdown
+
+model = ChatOpenAI(
+    model="gpt-4.1-mini",
+    temperature=0.4,
+    top_p=0.7
+)
+
+# 체인 구성
+summarize_chain = summarize_prompt | model | StrOutputParser()
+planner_chain = planner_prompt | model | StrOutputParser()
+
+# 최종 체인
+chain = (
+    summarize_chain |
+    RunnableParallel(
+        summary=RunnablePassthrough(),
+        plan=lambda x: planner_chain.invoke({"summary": x})
+    ) |
+    RunnableLambda(lambda x: f"<요약>\n{x['summary']}\n\n<일정>\n{x['plan']}")
+)
+
+# 체인 실행
+text = """내일 오전 8시에 서울역에서 출발해서 오전 11시에 부산역에 도착해.
+2박 3일동안 부산 기장군 부근에서 여행하고 싶어.
+맛있는 거 먹으면서 돌아다니고 싶고, 명소도 가고 싶어.
+그런데 자동차가 없어서 걸어다니거나 대중교통을 이용해야해.
+그리고 여행 마지막 날은 오후 5시에 부산역에서 출발해.
+여동생이랑 둘이서 가려고 하고, 예산은 50만원 내외로 부탁해."""
+result = chain.invoke({"text": text})
+display(Markdown(result))
+```
+
+**3. Output**
+
+<요약>
+- 여행 일정 : 2박 3일, 내일 오전 8시 서울역 출발, 오전 11시 부산역 도착, 마지막 날 오후 5시 부산역 출발  
+- 교통편 일정 : 서울역에서 부산역까지 기차, 부산 내에서는 도보 및 대중교통 이용  
+- 여행 장소 : 부산 기장군 부근  
+- 여행 스타일 : 맛집 탐방과 명소 방문 중심, 도보 및 대중교통 이용  
+- 예산 : 50만원 내외 (2인 기준)  
+- 추천 숙소 : 기장군 내 대중교통 접근성이 좋은 게스트하우스 또는 중저가 호텔 (예: 기장역 근처 숙소)
+
+<일정>
+| 날짜       | 시간          | 장소/활동                      | 세부 계획 및 비고                                              |
+|------------|---------------|-------------------------------|---------------------------------------------------------------|
+| 1일차 (내일) | 08:00         | 서울역 출발 (기차)             | KTX 이용, 약 3시간 소요                                       |
+|            | 11:00         | 부산역 도착                   | 부산역 도착 후 기장으로 이동 (부산 지하철 1호선 → 기장역까지 약 1시간) |
+|            | 12:30         | 점심: 기장시장 내 해산물 맛집 | 신선한 회, 해산물 요리 추천 (예산 2인 3~4만원)                |
+|            | 14:00         | 오랑대 해변 방문              | 도보 또는 버스 이용, 바다 경치 감상 및 산책                    |
+|            | 16:00         | 기장 해녀촌 방문              | 해녀 문화 체험 및 사진 촬영                                   |
+|            | 18:00         | 숙소 체크인 (기장역 근처 게스트하우스/중저가 호텔) | 대중교통 접근성 좋은 숙소 예약 (1박 약 5~7만원)               |
+|            | 19:00         | 저녁: 기장군 맛집 탐방        | 기장 멸치쌈밥 또는 해물탕 전문점 방문 (예산 2인 3~4만원)       |
+| 2일차      | 08:00         | 아침 식사: 숙소 근처 카페      | 가벼운 브런치 및 커피                                         |
+|            | 09:30         | 죽성 드림성당 방문            | 도보 또는 버스 이용, 사진 명소 및 조용한 산책                  |
+|            | 11:00         | 기장 연화리 해수욕장          | 해변 산책 및 주변 카페 탐방                                   |
+|            | 12:30         | 점심: 연화리 근처 맛집         | 해물파전, 생선구이 등 지역 음식 맛보기 (예산 2인 3만원 내외)   |
+|            | 14:00         | 아난티 코브 방문              | 쇼핑 및 카페, 산책로 즐기기 (버스 이용)                        |
+|            | 16:30         | 기장시장 또는 기장 전통시장 방문 | 간식 및 기념품 쇼핑                                           |
+|            | 18:30         | 저녁: 기장 근처 맛집           | 돼지국밥 또는 해산물 요리 전문점 방문 (예산 2인 3~4만원)       |
+|            | 20:00         | 숙소 복귀 및 휴식             |                                                               |
+| 3일차      | 08:00         | 아침 식사: 숙소 또는 근처 카페 |                                                               |
+|            | 09:30         | 일광해수욕장 방문             | 산책 및 바다 경치 감상                                        |
+|            | 11:00         | 기장 죽성리 등대 방문         | 도보 산책 및 사진 촬영                                        |
+|            | 12:30         | 점심: 기장 멸치국수 맛집       | 가볍고 지역 특산 맛보기 (예산 2인 2만원 내외)                  |
+|            | 14:00         | 기장 시내 카페 또는 간단한 쇼핑 | 휴식 및 기념품 구입                                           |
+|            | 15:30         | 숙소 체크아웃 및 부산역 이동   | 기장역 → 부산역 (지하철 약 1시간)                              |
+|            | 17:00         | 부산역 출발 (기차)             | 서울역 향해 출발                                              |
+
+
+예산 요약 (2인 기준, 대략적)
+- 교통비 (서울-부산 KTX 왕복): 약 12만원  
+- 숙박 (2박): 약 10~14만원  
+- 식비 (6끼): 약 18~22만원  
+- 기타(교통, 입장료, 간식 등): 약 4~6만원  
+총 예산 약 44~54만원 내외로 50만원 예산에 적합
+
+참고
+- 기장군 내 주요 관광지는 도보와 버스 이용이 편리하므로 대중교통 패스권 구매 추천  
+- 맛집은 현지 인기 식당 위주로 선정하여 맛집 탐방에 적합  
+- 숙소는 기장역 근처로 선정하여 부산역과의 이동 편리성 확보

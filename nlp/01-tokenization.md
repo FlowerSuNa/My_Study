@@ -4,7 +4,7 @@
 
 - English : `nltk` 패키지 사용
 
-- Korean : `konlpy`, `kss` 패키지 사용
+- Korean : `konlpy`, `kss`, `kiwipiepy` 패키지 사용
 
 ## Word Tokenization
 
