@@ -34,8 +34,8 @@
 
 **Generation**
 - 입력을 encoder에 넣고, decoder가 자기회귀적으로 text를 생성하도록 fine-tuning함
-- 학습 시에는 [Label Smoothing]()이 적용된 cross-entropy loss를 사용하였으며, `smoothing parameter = 0.1`로 설정함
-- 추론 시에는 [Beam Search]()를 사용하였으며, `beam width = 5`, `length penalty = 1`로 설정함
+- 학습 시에는 [Label Smoothing](#label-smoothing)이 적용된 cross-entropy loss를 사용하였으며, `smoothing parameter = 0.1`로 설정함
+- 추론 시에는 [Beam Search](#beam-search)를 사용하였으며, `beam width = 5`, `length penalty = 1`로 설정함
 
 **Translation**
 - BART 앞에 source 단어 임베딩을 BART 입력 공간으로 사상하는 작은 encoder를 추가함
@@ -50,7 +50,7 @@
 
 - BART는 다양한 benchmark에서 SOTA(state-of-the-art) 또는 경쟁력 있는 성능을 보임
 - 생성 작업(summarization, dialogue, QA)에서 우수한 성과를 보이며, 최대 +6 ROUGE 달성함
-- 이해 기반 작업(SQuAD, GLUE)에서도 RoBERTa와 유사한 성능을 달성함
+- 이해 기반 작업(SQuAD, [GLUE](#glue))에서도 RoBERTa와 유사한 성능을 달성함
 - 기계 번역 작업에서는 별도 역번역([Back-translation](#back-translation)) 없이도 +1.1 [BLEU](#bleu) (Bilingual Evaluation Understudy) 달성함
 - 다양한 noising 방식에 유연하게 대응할 수 있어, 범용성이 높은 모델임
 - 다만, 입력과 출력 간 의미적 연결이 약한 작업에서는 효율이 떨어질 수 있음
@@ -514,6 +514,26 @@ BART는 영어만으로 사전 학습하여 역번역 기준선을 개선함
 - BERT랑 구조는 같지만 학습 데이터를 훨씬 많이 사용하고, 마스킹 방식도 더 정교하게 조정함
 - NSP(Next Sentence Prediction)을 제거하여 성능을 높였음 <br>(NSP Task가 실제로 언어 이해 능력 향상에는 큰 도움이 안됨을 실험으로 확인함)
 
+### Label Smoothing
+
+- Label smoothing은 분류 문제에서 과적합을 줄이기 위한 정규화 기법임
+- 전체 class 수 K가 있을 때, smoothing parameter $\alpha$를 이용해 다음과 같이 분포를 재조정함
+    - 정답 클래스: $ ( 1 - \alpha + \frac{\alpha}{K} ) $
+    - 나머지 클래스: $ ( \frac{\alpha}{K} ) $
+
+- 정답 class에만 1.0을 주는 one-hot label 대신, 일부 확률을 다른 class에도 분산시킴 
+    - One-hot : [0, 0, 1, 0, 0]
+    - Label smoothing : [0.02, 0.02, 0.92, 0.02, 0.02]  , `smoothing parameter = 0.1`일 경우
+- 모델이 정답에 대해 지나치게 확신하지 않도록 조절하여 일반화 성능을 높임  
+- BART 논문에서는 fine-tuning 과정에서 label smoothing을 적용해 안정적인 학습과 다양한 문장 생성을 유도함
+
+### Beam Search
+
+- Beam search는 text 생성 모델에서 가장 가능성 높은 문장을 찾기 위한 탐색 알고리즘임  
+- 매 단계마다 확률이 높은 후보들을 여러 개(`beam width`만큼) 유지하며 탐색을 진행함  
+- 단순히 가장 높은 확률의 단어만 고르는 Greedy Search보다 더 나은 전체 시퀀스를 생성할 수 있음  
+- `Beam width`가 클수록 더 많은 경로를 고려하므로 정확도는 높아지지만 계산 비용도 증가함
+
 ### GLUE
 
 - GLUE는 다양한 NLP 과제를 모아놓은 benchmark 테스트임
@@ -568,5 +588,7 @@ BART는 영어만으로 사전 학습하여 역번역 기준선을 개선함
 - [논문 요약](https://velog.io/@tobigs-nlp/BART-DeNoising-Sequence-to-Sequence-Pre-training-for-Natural-Language-Generation-Translation-and-Comprehension)
 - [논문 번역](https://velog.io/@dutch-tulip/BART)
 - [GeLU](https://jik9210.tistory.com/14)
+- [Label Smoothing](https://blog.si-analytics.ai/21)
+- [Beam Search](https://blog.naver.com/sooftware/221809101199)
 - [CLS token](https://seungseop.tistory.com/35)
 - [XLNet, Two-stream Attention](https://velog.io/@zhenxi_23/%EB%85%BC%EB%AC%B8%EB%A6%AC%EB%B7%B0-XLNet)
