@@ -198,7 +198,7 @@
 
 - Token 분류 시에는 SQuAD의 정답 endpoint 분류와 유사하게, 전체 문서를 encoder와 decoder에 입력한 뒤, 각 단어의 표현이 포함된 decoder의 상단 hidden state를 활용해 분류를 수행함
 
-#### 3.3 Sequence Generation Tasks
+### 3.3 Sequence Generation Tasks
 
 - BART는 자기회귀 decoder를 갖추고 있어, 추상적인 질의응답과 요약과 같은 sequence 생성 작업을 직접 수행할 수 있음
     - 이 두 작업은 정보를 입력으로부터 복사해 활용하며, denoising 사전 학습 방식과 밀접하게 연관되어 작동함
