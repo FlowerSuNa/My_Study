@@ -10,6 +10,14 @@
 - UI에서 각 실행 단계를 상세히 확인할 수 있어 디버깅이 쉬움
 - 프롬프트 설계와 품질 개선에 중점을 둔 운영 도구임
 
+**`.env` 파일에 환경 변수 설정하기**
+
+```.env
+LANGSMITH_TRACING=true
+LANGSMITH_API_KEY="lsv2_..."
+LANGSMITH_PROJECT="{project_name}"
+```
+
 **Pricing**
 
 | 플랜 | 가격 | 포함 사용자 | 월간 트레이스 | 주요 기능 요약 |
@@ -52,3 +60,15 @@
 - 문서 기반 Q&A, 요약, 분류, 검색 등 다양한 태스크에 활용됨
 - 내부 문서나 사내 지식 검색용 챗봇 등에 자주 사용됨
 - 빠른 프로토타이핑과 맞춤형 LLM 어플리케이션 구축에 적합함
+
+# Langfuse
+
+[공식 문서](https://langfuse.com/docs/sdk/python/decorators)
+
+**`.env` 파일에 환경 변수 설정하기**
+
+```.env
+LANGFUSE_SECRET_KEY="sk-..."
+LANGFUSE_PUBLIC_KEY="pk-..."
+LANGFUSE_HOST="https://cloud.langfuse.com"
+```
