@@ -64,6 +64,7 @@ LANGSMITH_PROJECT="{project_name}"
 # Langfuse
 
 [공식 문서](https://langfuse.com/docs/sdk/python/decorators)
+[Docker Compose](https://langfuse.com/self-hosting/docker-compose)
 
 **`.env` 파일에 환경 변수 설정하기**
 
